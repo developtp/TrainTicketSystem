@@ -1,7 +1,15 @@
 public class User {
-    int passengerID;     // unique passenger ID
-    String name;         // passenger name
-    int age;             // passenger age
-    String gender;       // passenger gender
-    String phoneNumber;  // contact number
+    int passengerID;
+    String name;
+    int age;
+    String gender;
+    String phoneNumber;
+
+    public User(int passengerID, String name, int age, String gender, String phoneNumber) {
+        this.passengerID = passengerID;
+        this.name = name;
+        this.age = age;
+        this.gender = gender;
+        this.phoneNumber = phoneNumber;
+    }
 }
