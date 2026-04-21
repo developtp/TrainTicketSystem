@@ -1,3 +1,4 @@
+package model;
 public class User {
 
     private int userID;
@@ -18,6 +19,10 @@ public class User {
     }
 
     // Getter
+    public int getUserID() {
+        return userID;
+    }
+    
     public String getName() {
         return name;
     }

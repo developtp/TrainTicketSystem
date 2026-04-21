@@ -1,3 +1,4 @@
+package model;
 public class Train {
 
     private int trainID;
@@ -25,6 +26,26 @@ public class Train {
         return trainName;
     }
 
+    public int getTrainID() {
+        return trainID;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
+    public int getTotalSeats() {
+        return totalSeats;
+    }
+
+    public double getTicketPrice() {
+        return ticketPrice;
+    }
+    
     // Setter
     public void setTicketPrice(double ticketPrice) {
         if (ticketPrice >= 0) {

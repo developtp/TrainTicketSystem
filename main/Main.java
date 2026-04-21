@@ -1,6 +1,9 @@
+import model.User;
+
+package main;
 public class Main {
 
-    public static void main(String[] args) {
+        public static void main(String[] args) {
 
         User user1 = new User(
                 1,

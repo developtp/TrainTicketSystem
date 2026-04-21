@@ -1,3 +1,4 @@
+package model;
 public class Payment {
 
     private int paymentID;
@@ -20,6 +21,22 @@ public class Payment {
     }
 
     // Getter
+    public int getPaymentID() {
+        return paymentID;
+    }
+
+    public int getTicketID() {
+        return ticketID;
+    }
+
+    public String getPaymentDate() {
+        return paymentDate;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+    
     public double getTotalPrice() {
         return totalPrice;
     }

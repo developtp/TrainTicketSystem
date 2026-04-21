@@ -1,3 +1,4 @@
+package model;
 public class Booking {
 
     private int userID;
@@ -16,6 +17,18 @@ public class Booking {
     }
 
     // Getter
+    public int getUserID() {
+        return userID;
+    }
+    
+    public int getTrainID() {
+        return trainID;
+    }
+
+    public String getTravelDate() {
+        return travelDate;
+    }
+    
     public String getStatus() {
         return status;
     }
