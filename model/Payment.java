@@ -1,4 +1,7 @@
 package model;
+
+import java.time.LocalDate;
+
 public class Payment {
 
     private int paymentID;
@@ -42,9 +45,43 @@ public class Payment {
     }
 
     // Setter
+    public void setPaymentID(int paymentID) {
+        if (paymentID > 0) {
+            this.paymentID = paymentID;
+        } else {
+            throw new IllegalArgumentException("Payment ID must be a positive integer.");
+        }
+    }
+ 
+    public void setTicket(Ticket ticket) {
+        if (ticket != null) {
+            this.ticket = ticket;
+        } else {
+            throw new IllegalArgumentException("Ticket cannot be null.");
+        }
+    }
+ 
     public void setTotalPrice(double totalPrice) {
         if (totalPrice >= 0) {
             this.totalPrice = totalPrice;
+        } else {
+            throw new IllegalArgumentException("Total price cannot be negative.");
+        }
+    }
+ 
+    public void setPaymentDate(LocalDate paymentDate) {
+        if (paymentDate != null) {
+            this.paymentDate = paymentDate;
+        } else {
+            throw new IllegalArgumentException("Payment date cannot be null.");
+        }
+    }
+ 
+    public void setPaymentMethod(String paymentMethod) {
+        if (paymentMethod != null && !paymentMethod.trim().isEmpty()) {
+            this.paymentMethod = paymentMethod;
+        } else {
+            throw new IllegalArgumentException("Payment method cannot be null or empty.");
         }
     }
 }

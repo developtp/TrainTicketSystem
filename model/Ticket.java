@@ -1,24 +1,29 @@
 package model;
-public class Ticket {
 
+import java.time.LocalDate;
+
+public class Ticket { 
+
+    private  static int ticketCounter = 1;
     private int ticketID;
     private Train train;
-    private int userID;
+    private User userID;
     private String seatNumber;
-    private String travelDate;
+    private LocalDate travelDate;
     private String status;
 
     // Constructor
-    public Ticket(int ticketID, Train train,
-                  int userID, String seatNumber,
+    public Ticket(Train train,
+                  User userID, String seatNumber,
                   String travelDate, String status) {
 
-        this.ticketID = ticketID;
-        this.train = train;
-        this.userID = userID;
-        this.seatNumber = seatNumber;
-        this.travelDate = travelDate;
-        this.status = status;
+        this.ticketID = ticketCounter++;
+        setTrain(train);
+        setUser(userID);
+        setSeatNumber(seatNumber);
+        setTrain(train);
+        setTravelDate(travelDate);
+        setStatus(status);
     }
 
     // Getter
@@ -30,7 +35,7 @@ public class Ticket {
         return train;
     }
 
-    public int getUserID() {
+    public User getUserID() {
         return userID;
     }
 
@@ -47,7 +52,44 @@ public class Ticket {
     }
 
     // Setter
+ 
+    public void setTrain(Train train) {
+        if (train != null) {
+            this.train = train;
+        } else {
+            throw new IllegalArgumentException("Train cannot be null.");
+        }
+    }
+ 
+    public void setUser(User user) {
+        if (user != null) {
+            this.userID = user;
+        } else {
+            throw new IllegalArgumentException("User cannot be null.");
+        }
+    }
+ 
+    public void setSeatNumber(String seatNumber) {
+        if (seatNumber != null && !seatNumber.trim().isEmpty()) {
+            this.seatNumber = seatNumber;
+        } else {
+            throw new IllegalArgumentException("Seat number cannot be null or empty.");
+        }
+    }
+ 
+    public void setTravelDate(LocalDate travelDate) {
+        if (travelDate != null && !travelDate.trim().isEmpty()) {
+            this.travelDate = LocalDate.parse(travelDate)
+        } else {
+            throw new IllegalArgumentException("Travel date cannot be null or empty.");
+        }
+    }
+ 
     public void setStatus(String status) {
-        this.status = status;
+        if (status.equals("Confirmed") || status.equals("Cancelled") || status.equals("Pending")) {
+            this.status = status;
+        } else {
+            throw new IllegalArgumentException("Invalid status. Allowed values are: Confirmed, Cancelled, Pending.");
+        }
     }
 }
