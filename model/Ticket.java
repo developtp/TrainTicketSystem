@@ -1,95 +1,107 @@
 package model;
 
-import java.time.LocalDate;
+public class Ticket implements Displayable, Printable {
 
-public class Ticket { 
+    private static int ticketCounter = 1;
 
-    private  static int ticketCounter = 1;
-    private int ticketID;
-    private Train train;
-    private User userID;
+    private int ticketId;
+    private Booking booking;
     private String seatNumber;
-    private LocalDate travelDate;
     private String status;
 
-    // Constructor
-    public Ticket(Train train,
-                  User userID, String seatNumber,
-                  String travelDate, String status) {
-
-        this.ticketID = ticketCounter++;
-        setTrain(train);
-        setUser(userID);
+    private Ticket(Booking booking, String seatNumber) {
+        this.ticketId = ticketCounter++;
+        this.booking = booking;
         setSeatNumber(seatNumber);
-        setTrain(train);
-        setTravelDate(travelDate);
-        setStatus(status);
+        this.status = "Confirmed";
     }
 
-    // Getter
-    public int getTicketID() {
-        return ticketID;
-    }
-    
-    public Train getTrain() {
-        return train;
+    // Factory method: validates all conditions before creating a Ticket.
+    // Also calls reserveSeat() on the train to track seat availability.
+    public static Ticket createTicket(Booking booking, String seatNumber) {
+        if (booking == null) {
+            System.out.println("Ticket cannot be created. Booking is null.");
+            return null;
+        }
+
+        if (!booking.isConfirmed()) {
+            System.out.println("Ticket cannot be created. Booking is not confirmed.");
+            return null;
+        }
+
+        if (seatNumber == null || seatNumber.trim().isEmpty()) {
+            System.out.println("Ticket cannot be created. Seat number is invalid.");
+            return null;
+        }
+
+        // Reserve the seat on the train. If the train is full, ticket creation fails.
+        boolean reserved = booking.getTrain().reserveSeat();
+        if (!reserved) {
+            System.out.println("Ticket cannot be created. Train is fully booked.");
+            return null;
+        }
+
+        return new Ticket(booking, seatNumber);
     }
 
-    public User getUserID() {
-        return userID;
+    public int getTicketId() {
+        return ticketId;
+    }
+
+    public static int getTicketCount() {
+        return ticketCounter - 1;
+    }
+
+    public Booking getBooking() {
+        return booking;
     }
 
     public String getSeatNumber() {
         return seatNumber;
     }
 
-    public LocalDate getTravelDate() {
-        return travelDate;
-    }
-
     public String getStatus() {
         return status;
     }
 
-    // Setter
- 
-    public void setTrain(Train train) {
-        if (train != null) {
-            this.train = train;
-        } else {
-            throw new IllegalArgumentException("Train cannot be null.");
-        }
-    }
- 
-    public void setUser(User user) {
-        if (user != null) {
-            this.userID = user;
-        } else {
-            throw new IllegalArgumentException("User cannot be null.");
-        }
-    }
- 
     public void setSeatNumber(String seatNumber) {
         if (seatNumber != null && !seatNumber.trim().isEmpty()) {
             this.seatNumber = seatNumber;
         } else {
-            throw new IllegalArgumentException("Seat number cannot be null or empty.");
+            System.out.println("Invalid seat number.");
         }
     }
- 
-    public void setTravelDate(String travelDate) {
-        if (travelDate != null && !travelDate.trim().isEmpty()) {
-            this.travelDate = LocalDate.parse(travelDate);
-        } else {
-            throw new IllegalArgumentException("Travel date cannot be null or empty.");
-        }
+
+    public boolean isValidTicket() {
+        return booking != null;
     }
- 
-    public void setStatus(String status) {
-        if (status.equals("Confirmed") || status.equals("Cancelled") || status.equals("Pending")) {
-            this.status = status;
-        } else {
-            throw new IllegalArgumentException("Invalid status. Allowed values are: Confirmed, Cancelled, Pending.");
+
+    // From Displayable interface:
+    // displayInfo() shows the ticket's data in a plain format — used for system-level display.
+    @Override
+    public void displayInfo() {
+        if (!isValidTicket()) {
+            System.out.println("Invalid ticket.");
+            return;
         }
+
+        System.out.println("Ticket ID   : " + ticketId);
+        System.out.println("Passenger   : " + booking.getUser().getName());
+        System.out.println("Train       : " + booking.getTrain().getTrainName());
+        System.out.println("Route       : " + booking.getTrain().getSource() + " -> " + booking.getTrain().getDestination());
+        System.out.println("Seat        : " + seatNumber);
+        System.out.println("Travel Date : " + booking.getTravelDate());
+        System.out.println("Status      : " + status);
+        System.out.println("Price       : $" + booking.getTrain().getTicketPrice());
+    }
+
+    // From Printable interface:
+    // print() produces a formal ticket layout — suitable for the passenger to present at boarding.
+    // It wraps displayInfo() with a header and footer to create a complete ticket document.
+    @Override
+    public void print() {
+        System.out.println("===== TRAIN TICKET =====");
+        displayInfo();
+        System.out.println("========================");
     }
 }

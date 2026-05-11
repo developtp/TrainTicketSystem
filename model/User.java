@@ -1,28 +1,29 @@
 package model;
 
-public class User {
+public class User implements Displayable {
 
     private static int userCounter = 1;
-    private int userID;
+
+    private int userId;
     private String name;
     private int age;
     private String gender;
     private String phoneNumber;
 
-    // Constructor
-    public User(String name, int age,
-                String gender, String phoneNumber) {
-
-        this.userID = userCounter++;
+    public User(String name, int age, String gender, String phoneNumber) {
+        this.userId = userCounter++;
         setName(name);
         setAge(age);
         setGender(gender);
         setPhoneNumber(phoneNumber);
     }
 
-    // Getter
-    public int getUserID() {
-        return userID;
+    public int getUserId() {
+        return userId;
+    }
+
+    public static int getUserCount() {
+        return userCounter - 1;
     }
 
     public String getName() {
@@ -41,44 +42,47 @@ public class User {
         return phoneNumber;
     }
 
-    // Setter
-    public void setUserID(int userID) {
-        if (userID > 0) {
-            this.userID = userID;
-        } else {
-            throw new IllegalArgumentException("User ID must be a positive .");
-        }
-    }
- 
+    // No setUserId() because userId should not be changed
+
     public void setName(String name) {
         if (name != null && !name.trim().isEmpty()) {
             this.name = name;
         } else {
-            throw new IllegalArgumentException("Name cannot be null or empty.");
+            System.out.println("Invalid name.");
         }
     }
- 
+
     public void setAge(int age) {
         if (age > 0 && age < 100) {
             this.age = age;
         } else {
-            throw new IllegalArgumentException("Age must be between 1 and 99.");
+            System.out.println("Invalid age.");
         }
     }
- 
+
     public void setGender(String gender) {
-        if (gender.equalsIgnoreCase("male") || gender.equalsIgnoreCase("female")) {
+        if (gender != null &&
+           (gender.equalsIgnoreCase("Male") || gender.equalsIgnoreCase("Female"))) {
             this.gender = gender;
         } else {
-            throw new IllegalArgumentException("Gender must be Male or Female.");
+            System.out.println("Invalid gender.");
         }
     }
- 
+
     public void setPhoneNumber(String phoneNumber) {
-        if (phoneNumber.matches("\\d{10}")) {
+        if (phoneNumber != null && phoneNumber.matches("\\d{10}")) {
             this.phoneNumber = phoneNumber;
         } else {
-            throw new IllegalArgumentException("Phone number must be exactly 10 digits.");
+            System.out.println("Invalid phone number. Must be 10 digits.");
         }
+    }
+
+    @Override
+    public void displayInfo() {
+        System.out.println("User ID : " + userId);
+        System.out.println("Name    : " + name);
+        System.out.println("Age     : " + age);
+        System.out.println("Gender  : " + gender);
+        System.out.println("Phone   : " + phoneNumber);
     }
 }

@@ -2,80 +2,93 @@ package model;
 
 import java.time.LocalDate;
 
-public class Payment {
+public class Booking implements Displayable {
 
-    private static int paymentCounter = 1; 
-    private int paymentID;
-    private Ticket ticket;
-    private double totalPrice;
-    private LocalDate paymentDate;
-    private String paymentMethod;
+    private static int bookingCounter = 1;
 
-    // Constructor
-    public Payment(int ticketID,
-                   double totalPrice,
-                   String paymentDate,
-                   String paymentMethod) {
+    private int bookingId;
+    private User user;
+    private Train train;
+    private LocalDate travelDate;
+    private String status;
 
-        this.paymentID = paymentCounter++;
-        setTicket(ticket);
-        setTotalPrice(totalPrice);
-        setPaymentDate(LocalDate.parse(paymentDate));
-        setPaymentMethod(paymentMethod);
+    public Booking(User user, Train train, String travelDate, String status) {
+        this.bookingId = bookingCounter++;
+        setUser(user);
+        setTrain(train);
+        setTravelDate(LocalDate.parse(travelDate));
+        setStatus(status);
     }
 
-    // Getter
-    public int getPaymentID() {
-        return paymentID;
+    public int getBookingId() {
+        return bookingId;
     }
 
-    public Ticket getTicket() {
-        return ticket;
+    public static int getBookingCount() {
+        return bookingCounter - 1;
     }
 
-    public LocalDate getPaymentDate() {
-        return paymentDate;
+    public User getUser() {
+        return user;
     }
 
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-    
-    public double getTotalPrice() {
-        return totalPrice;
+    public Train getTrain() {
+        return train;
     }
 
-    // Setter
- 
-    public void setTicket(Ticket ticket) {
-        if (ticket != null) {
-            this.ticket = ticket;
+    public LocalDate getTravelDate() {
+        return travelDate;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setUser(User user) {
+        if (user != null) {
+            this.user = user;
         } else {
-            throw new IllegalArgumentException("Ticket cannot be null.");
+            System.out.println("User cannot be null.");
         }
     }
- 
-    public void setTotalPrice(double totalPrice) {
-        if (totalPrice >= 0) {
-            this.totalPrice = totalPrice;
+
+    public void setTrain(Train train) {
+        if (train != null) {
+            this.train = train;
         } else {
-            throw new IllegalArgumentException("Total price cannot be negative.");
+            System.out.println("Train cannot be null.");
         }
     }
- 
-    public void setPaymentDate(LocalDate paymentDate) {
-        if (paymentDate != null) {
-            this.paymentDate = paymentDate;
+
+    public void setTravelDate(LocalDate travelDate) {
+        if (travelDate != null && !travelDate.isBefore(LocalDate.now())) {
+            this.travelDate = travelDate;
         } else {
-            throw new IllegalArgumentException("Payment date cannot be null.");
+            System.out.println("Invalid travel date.");
         }
     }
- 
-    public void setPaymentMethod(String paymentMethod) {
-        if (paymentMethod != null && !paymentMethod.trim().isEmpty()) {
-            this.paymentMethod = paymentMethod;
+
+    public void setStatus(String status) {
+        if (status != null &&
+           (status.equals("Pending") || status.equals("Confirmed") || status.equals("Cancelled"))) {
+            this.status = status;
         } else {
-            throw new IllegalArgumentException("Payment method cannot be null or empty.");
+            System.out.println("Invalid booking status.");
         }
+    }
+
+    public boolean isConfirmed() {
+        return status.equals("Confirmed");
+    }
+
+    @Override
+    public void displayInfo() {
+        System.out.println("Booking ID  : " + bookingId);
+        System.out.println("Passenger   : " + user.getName());
+        System.out.println("Train       : " + train.getTrainName());
+        System.out.println("Route       : " + train.getSource() + " -> " + train.getDestination());
+        System.out.println("Travel Date : " + travelDate);
+        System.out.println("Status      : " + status);
+        System.out.println("Price       : $" + train.getTicketPrice());
     }
 }
