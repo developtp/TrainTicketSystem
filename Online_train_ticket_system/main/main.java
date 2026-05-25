@@ -82,19 +82,5 @@ public class Main {
 
         System.out.println("\n=== DESTINATION HASHSET TEST ===");
         system.displayDestinations();
-
-        System.out.println("\n=== STATIC COUNTERS VS COLLECTION SIZE ===");
-        System.out.println("User.getUserCount()       : " + User.getUserCount());
-        System.out.println("system.getUserMapSize()   : " + system.getUserMapSize());
-        System.out.println("Staff.getStaffCount()     : " + Staff.getStaffCount());
-        System.out.println("Train.getTrainCount()     : " + Train.getTrainCount());
-        System.out.println("system.getTrainListSize() : " + system.getTrainListSize());
-        System.out.println("Booking.getBookingCount() : " + Booking.getBookingCount());
-        System.out.println("system.getBookingListSize(): " + system.getBookingListSize());
-        System.out.println("Payment.getPaymentCount() : " + Payment.getPaymentCount());
-        System.out.println("system.getPaymentListSize(): " + system.getPaymentListSize());
-        System.out.println("Ticket.getTicketCount()   : " + Ticket.getTicketCount());
-        System.out.println("system.getTicketListSize(): " + system.getTicketListSize());
-
     }
 }
