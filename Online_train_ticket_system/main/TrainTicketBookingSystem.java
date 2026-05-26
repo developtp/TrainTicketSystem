@@ -159,17 +159,4 @@ public class TrainTicketBookingSystem implements Displayable, UserSearchable, Tr
     public int getPaymentListSize() { return payments.size(); }
     public int getTicketListSize() { return tickets.size(); }
     public int getDestinationSetSize() { return destinations.size(); }
-
-    @Override
-    public void displayInfo() {
-        System.out.println("\n========== System Summary ==========");
-        System.out.println("System Name  : " + systemName);
-        System.out.println("Users        : " + users.size());
-        System.out.println("Trains       : " + trains.size());
-        System.out.println("Bookings     : " + bookings.size());
-        System.out.println("Payments     : " + payments.size());
-        System.out.println("Tickets      : " + tickets.size());
-        System.out.println("Destinations : " + destinations.size());
-        System.out.println("====================================");
-    }
 }

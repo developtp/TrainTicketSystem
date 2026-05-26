@@ -30,13 +30,10 @@ public class Staff extends Person {
     @Override
     public void displayInfo() {
         System.out.println("Staff ID: " + staffId);
-        System.out.println("Name: " + name);
-        System.out.println("Age: " + age);
-        System.out.println("Gender: " + gender);
-        System.out.println("Phone: " + phoneNumber);
+        super.displayInfo();
         System.out.println("Role: " + role);
     }
-
+    
     public static int getStaffCount() {
         return staffCount;
     }

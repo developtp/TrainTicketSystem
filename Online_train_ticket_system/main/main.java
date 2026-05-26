@@ -6,7 +6,7 @@ import interfaces.Printable;
 import java.util.ArrayList;
 import model.*;
 
-public class Main {
+public class main {
     public static void main(String[] args) {
         TrainTicketBookingSystem system = new TrainTicketBookingSystem("CAM Train Booking");
 

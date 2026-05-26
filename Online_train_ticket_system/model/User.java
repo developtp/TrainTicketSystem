@@ -50,10 +50,7 @@ public class User extends Person {
     @Override
     public void displayInfo() {
         System.out.println("User ID: " + userId);
-        System.out.println("Name: " + name);
-        System.out.println("Age: " + age);
-        System.out.println("Gender: " + gender);
-        System.out.println("Phone: " + phoneNumber);
+        super.displayInfo();
         System.out.println("Total Bookings: " + bookings.size());
     }
 
