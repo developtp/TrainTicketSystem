@@ -53,9 +53,4 @@ public class Staff extends Person {
     }
 
     public static int getStaffCount() { return staffCount; }
-
-    @Override
-    public String getRoleDescription() {
-    return "Staff member who manages train services";
-}
 }

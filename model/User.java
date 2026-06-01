@@ -110,9 +110,4 @@ public class User extends Person implements Comparable<User> {
     }
 
     public static int getUserCount() { return userCount; }
-    
-    @Override
-    public String getRoleDescription() {
-    return "Passenger who books train tickets";
-}
 }
