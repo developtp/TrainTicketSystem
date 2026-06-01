@@ -4,40 +4,40 @@ import interfaces.BookingSearchable;
 import interfaces.Displayable;
 import interfaces.TrainSearchable;
 import interfaces.UserSearchable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import model.Booking;
 import model.Payment;
 import model.Ticket;
 import model.Train;
 import model.User;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-
 public class TrainTicketBookingSystem implements Displayable, UserSearchable, TrainSearchable, BookingSearchable {
-    private String systemName;
+
+    private String             systemName;
     private HashMap<Integer, User> users;
-    private ArrayList<Train> trains;
+    private ArrayList<Train>   trains;
     private ArrayList<Booking> bookings;
     private ArrayList<Payment> payments;
-    private ArrayList<Ticket> tickets;
-    private HashSet<String> destinations;
+    private ArrayList<Ticket>  tickets;
+    private HashSet<String>    destinations;
 
+    // ─── Constructor ─────────────────────────────────────────────────────────────
     public TrainTicketBookingSystem(String systemName) {
-        if (systemName == null || systemName.trim().isEmpty()) {
-            this.systemName = "Train Ticket Booking System";
-        } else {
-            this.systemName = systemName.trim();
-        }
-        this.users = new HashMap<>();
-        this.trains = new ArrayList<>();
-        this.bookings = new ArrayList<>();
-        this.payments = new ArrayList<>();
-        this.tickets = new ArrayList<>();
+        this.systemName   = (systemName == null || systemName.trim().isEmpty())
+                          ? "Train Ticket Booking System"
+                          : systemName.trim();
+        this.users        = new HashMap<>();
+        this.trains       = new ArrayList<>();
+        this.bookings     = new ArrayList<>();
+        this.payments     = new ArrayList<>();
+        this.tickets      = new ArrayList<>();
         this.destinations = new HashSet<>();
     }
 
+    // ─── Add methods ─────────────────────────────────────────────────────────────
     public boolean addUser(User user) {
         if (user == null) return false;
         if (users.containsKey(user.getUserId())) {
@@ -59,9 +59,25 @@ public class TrainTicketBookingSystem implements Displayable, UserSearchable, Tr
         return true;
     }
 
+    // ─── Search methods (interface overrides) ────────────────────────────────────
+
+    // EXISTING — search by numeric ID (from UserSearchable)
     @Override
     public User searchUserById(int userId) {
         return users.get(userId);
+    }
+
+    // NEW OVERLOAD — search by name (case-insensitive)
+    // Returns first match found, or null if no user has that name.
+    // Example: system.searchUserByName("dara")  →  finds "Dara"
+    public User searchUserByName(String name) {
+        if (name == null || name.trim().isEmpty()) return null;
+        for (User user : users.values()) {
+            if (user.getName().equalsIgnoreCase(name.trim())) {
+                return user;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -80,6 +96,7 @@ public class TrainTicketBookingSystem implements Displayable, UserSearchable, Tr
         return null;
     }
 
+    // ─── Core operations ─────────────────────────────────────────────────────────
     public boolean createBooking(Booking booking) {
         if (booking == null) {
             System.out.println("Cannot create a null booking.");
@@ -93,12 +110,8 @@ public class TrainTicketBookingSystem implements Displayable, UserSearchable, Tr
             System.out.println("Cannot create booking without user and train.");
             return false;
         }
-        if (!users.containsValue(booking.getUser())) {
-            addUser(booking.getUser());
-        }
-        if (!trains.contains(booking.getTrain())) {
-            addTrain(booking.getTrain());
-        }
+        if (!users.containsValue(booking.getUser()))   addUser(booking.getUser());
+        if (!trains.contains(booking.getTrain()))       addTrain(booking.getTrain());
         bookings.add(booking);
         booking.getUser().addBooking(booking);
         booking.getTrain().addBooking(booking);
@@ -130,33 +143,62 @@ public class TrainTicketBookingSystem implements Displayable, UserSearchable, Tr
         return ticket;
     }
 
+    // ─── Display helpers ─────────────────────────────────────────────────────────
     public void displayAllUsers() {
-        System.out.println("\n========== Users ==========");
-        if (users.isEmpty()) {
-            System.out.println("No users yet.");
-            return;
-        }
+        System.out.println("\n========== All Users ==========");
+        if (users.isEmpty()) { System.out.println("No users yet."); return; }
         for (Map.Entry<Integer, User> entry : users.entrySet()) {
             entry.getValue().displayInfo();
             System.out.println();
         }
     }
 
+    // NEW — display all trains (symmetric to displayAllUsers)
+    public void displayAllTrains() {
+        System.out.println("\n========== All Trains ==========");
+        if (trains.isEmpty()) { System.out.println("No trains yet."); return; }
+        for (Train train : trains) {
+            train.displayInfo();
+            System.out.println();
+        }
+    }
+
     public void displayDestinations() {
         System.out.println("\nAvailable Destinations:");
-        if (destinations.isEmpty()) {
-            System.out.println("No destinations yet.");
-            return;
-        }
+        if (destinations.isEmpty()) { System.out.println("No destinations yet."); return; }
         for (String destination : destinations) {
             System.out.println("- " + destination);
         }
     }
 
-    public int getUserMapSize() { return users.size(); }
-    public int getTrainListSize() { return trains.size(); }
-    public int getBookingListSize() { return bookings.size(); }
-    public int getPaymentListSize() { return payments.size(); }
-    public int getTicketListSize() { return tickets.size(); }
-    public int getDestinationSetSize() { return destinations.size(); }
+    // ─── displayInfo() override (FIXED — was missing, caused compile error) ───────
+    // Required because this class implements Displayable.
+    // Without this method the compiler throws:
+    //   "TrainTicketBookingSystem must implement the inherited abstract method Displayable.displayInfo()"
+    @Override
+    public void displayInfo() {
+        System.out.println("\n========== System Info ==========");
+        System.out.println("System Name : " + systemName);
+        System.out.println("Users       : " + users.size());
+        System.out.println("Trains      : " + trains.size());
+        System.out.println("Bookings    : " + bookings.size());
+        System.out.println("Payments    : " + payments.size());
+        System.out.println("Tickets     : " + tickets.size());
+        System.out.println("=================================");
+    }
+
+    // ─── toString() override (NEW) ───────────────────────────────────────────────
+    @Override
+    public String toString() {
+        return String.format("TrainTicketBookingSystem{name='%s', users=%d, trains=%d, bookings=%d}",
+                systemName, users.size(), trains.size(), bookings.size());
+    }
+
+    // ─── Size getters ─────────────────────────────────────────────────────────────
+    public int getUserMapSize()      { return users.size(); }
+    public int getTrainListSize()    { return trains.size(); }
+    public int getBookingListSize()  { return bookings.size(); }
+    public int getPaymentListSize()  { return payments.size(); }
+    public int getTicketListSize()   { return tickets.size(); }
+    public int getDestinationSetSize(){ return destinations.size(); }
 }
