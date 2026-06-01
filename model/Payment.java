@@ -29,7 +29,7 @@ public class Payment implements Displayable, Payable, Printable {
         paymentCount++;
     }
 
-    // OVERLOAD 2 — caller provides a custom amount (e.g. adjusted fare)
+    // OVERLOAD 2 — caller provides a custom amount 
     public Payment(Booking booking, String paymentMethod, double customAmount) {
         this(booking, paymentMethod);
         if (customAmount > 0) {
