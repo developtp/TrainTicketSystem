@@ -14,7 +14,6 @@ public class Ticket implements Displayable, Printable {
     private String  seatNumber;
     private String  status;
 
-    // ─── Constructor (private — use createTicket() factory method) ────────────────
     private Ticket(Booking booking, String seatNumber) {
         this.ticketId   = nextTicketId++;
         this.booking    = booking;
@@ -23,15 +22,11 @@ public class Ticket implements Displayable, Printable {
         ticketCount++;
     }
 
-    // ─── Helper ──────────────────────────────────────────────────────────────────
     private static String cleanSeatNumber(String seatNumber) {
         if (seatNumber == null || seatNumber.trim().isEmpty()) return "No Seat";
         return seatNumber.trim().toUpperCase();
     }
 
-    // ─── Factory method (EXISTING) ───────────────────────────────────────────────
-    // Validates all preconditions before creating a Ticket.
-    // Called via: Ticket.createTicket(booking, payment, "A1")
     public static Ticket createTicket(Booking booking, Payment payment, String seatNumber) {
         if (booking == null) {
             System.out.println("Ticket cannot be created. Booking is null.");
@@ -62,14 +57,13 @@ public class Ticket implements Displayable, Printable {
         return ticket;
     }
 
-    // ─── Getters ─────────────────────────────────────────────────────────────────
     public int     getTicketId()   { return ticketId; }
     public Booking getBooking()    { return booking; }
     public String  getSeatNumber() { return seatNumber; }
     public String  getStatus()     { return status; }
     public boolean isIssued()      { return "Issued".equalsIgnoreCase(status); }
 
-    // ─── displayInfo() override (EXISTING) ───────────────────────────────────────
+    // OVERRIDE — Displayable interface
     @Override
     public void displayInfo() {
         System.out.println("\n========== Ticket Detail ==========");
@@ -89,7 +83,7 @@ public class Ticket implements Displayable, Printable {
         System.out.println("===================================");
     }
 
-    // ─── print() override — Printable interface (EXISTING) ───────────────────────
+    // OVERRIDE — Printable interface
     @Override
     public void print() {
         System.out.println("\n========== FORMAL TRAIN TICKET ==========");
@@ -108,18 +102,13 @@ public class Ticket implements Displayable, Printable {
         System.out.println("=========================================");
     }
 
-    // ─── toString() override (NEW) ───────────────────────────────────────────────
-    // Quick one-liner for logging — e.g. System.out.println(ticket)
     @Override
     public String toString() {
         return String.format("Ticket{id=%d, seat='%s', status='%s', booking=%d}",
-                ticketId,
-                seatNumber,
-                status,
+                ticketId, seatNumber, status,
                 (booking != null ? booking.getBookingId() : -1));
     }
 
-    // ─── equals() override (NEW) ─────────────────────────────────────────────────
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -128,7 +117,6 @@ public class Ticket implements Displayable, Printable {
         return this.ticketId == other.ticketId;
     }
 
-    // ─── hashCode() override (NEW) ───────────────────────────────────────────────
     @Override
     public int hashCode() {
         return Objects.hash(ticketId);

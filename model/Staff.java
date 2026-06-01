@@ -10,7 +10,6 @@ public class Staff extends Person {
     private static int staffCount  = 0;
     private static int nextStaffId = 1;
 
-    // ─── Constructor ─────────────────────────────────────────────────────────────
     public Staff(String name, int age, String gender, String phoneNumber, String role) {
         super(name, age, gender, phoneNumber);
         this.staffId = nextStaffId++;
@@ -18,7 +17,6 @@ public class Staff extends Person {
         setRole(role);
     }
 
-    // ─── Getters / Setters ───────────────────────────────────────────────────────
     public int    getStaffId() { return staffId; }
     public String getRole()    { return role; }
 
@@ -26,25 +24,21 @@ public class Staff extends Person {
         this.role = cleanText(role, "General Staff");
     }
 
-    // ─── displayInfo() override (EXISTING) ───────────────────────────────────────
-    // Overrides Person.displayInfo() — adds staffId and role around the shared info
+    // OVERRIDE — adds staffId and role around shared Person info
     @Override
     public void displayInfo() {
         System.out.println("Staff ID: " + staffId);
-        super.displayInfo();   // calls Person.displayInfo() — name, age, gender, phone
+        super.displayInfo();
         System.out.println("Role    : " + role);
     }
 
-    // ─── toString() override (NEW) ───────────────────────────────────────────────
-    // Chains super.toString() from Person so staff inherits the base description
+    // OVERRIDE — chains super.toString() so Person controls its own fields
     @Override
     public String toString() {
-        return String.format("Staff{id=%d, name='%s', age=%d, role='%s'}",
-                staffId, name, age, role);
+        return String.format("Staff{id=%d, role='%s', base=[%s]}",
+                staffId, role, super.toString());
     }
 
-    // ─── equals() override (NEW) ─────────────────────────────────────────────────
-    // Two Staff objects are equal only if they share the same staffId.
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -53,11 +47,15 @@ public class Staff extends Person {
         return this.staffId == other.staffId;
     }
 
-    // ─── hashCode() override (NEW) ───────────────────────────────────────────────
     @Override
     public int hashCode() {
         return Objects.hash(staffId);
     }
 
     public static int getStaffCount() { return staffCount; }
+
+    @Override
+    public String getRoleDescription() {
+    return "Staff member who manages train services";
+}
 }

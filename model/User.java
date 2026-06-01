@@ -1,9 +1,10 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Objects;
 
-public class User extends Person {
+public class User extends Person implements Comparable<User> {
 
     private int userId;
     private ArrayList<Booking> bookings;
@@ -11,7 +12,6 @@ public class User extends Person {
     private static int userCount  = 0;
     private static int nextUserId = 1;
 
-    // ─── Constructor ─────────────────────────────────────────────────────────────
     public User(String name, int age, String gender, String phoneNumber) {
         super(name, age, gender, phoneNumber);
         this.userId   = nextUserId++;
@@ -19,37 +19,34 @@ public class User extends Person {
         userCount++;
     }
 
-    // ─── Getters ─────────────────────────────────────────────────────────────────
-    public int getUserId()            { return userId; }
-    public int getBookingHistorySize(){ return bookings.size(); }
+    public int getUserId()             { return userId; }
+    public int getBookingHistorySize() { return bookings.size(); }
 
     public ArrayList<Booking> getBookingsCopy() {
         return new ArrayList<>(bookings);
     }
 
-    // ─── Booking management ──────────────────────────────────────────────────────
     public void addBooking(Booking booking) {
         if (booking != null && !bookings.contains(booking)) {
             bookings.add(booking);
         }
     }
 
-    // ─── displayBookingHistory() — OVERLOADED (3 versions) ───────────────────────
-
-    // VERSION 1 (EXISTING) — shows ALL bookings
+    // OVERLOAD 1 — show ALL bookings (sorted by travel date)
     public void displayBookingHistory() {
         System.out.println("\nBooking History for " + name + ":");
         if (bookings.isEmpty()) {
             System.out.println("  No bookings yet.");
             return;
         }
-        for (Booking booking : bookings) {
+        ArrayList<Booking> sorted = new ArrayList<>(bookings);
+        Collections.sort(sorted);
+        for (Booking booking : sorted) {
             booking.displayInfo();
         }
     }
 
-    // VERSION 2 (NEW OVERLOAD) — filter by status: "Pending", "Confirmed", "Cancelled"
-    // Example usage: user.displayBookingHistory("Confirmed")
+    // OVERLOAD 2 — filter by status: "Pending", "Confirmed", "Cancelled"
     public void displayBookingHistory(String statusFilter) {
         System.out.println("\nBooking History for " + name
                 + " [status = " + statusFilter + "]:");
@@ -65,8 +62,7 @@ public class User extends Person {
         }
     }
 
-    // VERSION 3 (NEW OVERLOAD) — show only the most recent N bookings
-    // Example usage: user.displayBookingHistory(2)  → last 2 bookings
+    // OVERLOAD 3 — show only the most recent N bookings
     public void displayBookingHistory(int limit) {
         System.out.println("\nLast " + limit + " booking(s) for " + name + ":");
         if (bookings.isEmpty()) {
@@ -79,27 +75,27 @@ public class User extends Person {
         }
     }
 
-    // ─── displayInfo() override (EXISTING) ───────────────────────────────────────
-    // Overrides Person.displayInfo() — adds userId and booking count on top/bottom
+    // OVERRIDE — adds userId and booking count around shared Person info
     @Override
     public void displayInfo() {
         System.out.println("User ID       : " + userId);
-        super.displayInfo();   // calls Person.displayInfo() — prints name, age, gender, phone
+        super.displayInfo();
         System.out.println("Total Bookings: " + bookings.size());
     }
 
-    // ─── toString() override (NEW) ───────────────────────────────────────────────
-    // Chains with super.toString() from Person so we don't repeat name/phone logic
+    // OVERRIDE — chains super.toString() so Person controls its own fields
     @Override
     public String toString() {
-        return String.format("User{id=%d, name='%s', age=%d, bookings=%d}",
-                userId, name, age, bookings.size());
+        return String.format("User{id=%d, bookings=%d, base=[%s]}",
+                userId, bookings.size(), super.toString());
     }
 
-    // ─── equals() override (NEW) ─────────────────────────────────────────────────
-    // Two User objects are equal only if they have the same userId.
-    // This fixes the contains() check in addBooking() — previously it compared
-    // memory addresses, so the same logical user could be added twice.
+    // OVERRIDE — sort Users alphabetically by name
+    @Override
+    public int compareTo(User other) {
+        return this.name.compareTo(other.name);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -108,13 +104,15 @@ public class User extends Person {
         return this.userId == other.userId;
     }
 
-    // ─── hashCode() override (NEW) ───────────────────────────────────────────────
-    // Must match equals() — use userId as the hash key.
-    // This makes User work correctly inside HashMap and HashSet.
     @Override
     public int hashCode() {
         return Objects.hash(userId);
     }
 
     public static int getUserCount() { return userCount; }
+    
+    @Override
+    public String getRoleDescription() {
+    return "Passenger who books train tickets";
+}
 }

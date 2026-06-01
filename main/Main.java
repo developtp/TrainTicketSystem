@@ -12,13 +12,18 @@ public class Main {
 
         TrainTicketBookingSystem system = new TrainTicketBookingSystem("CAM Train Booking");
 
-        // ── Create people ────────────────────────────────────────────────────────
+        // ── Create people ───────────────────────────────────────────────────────
         User  user1  = new User("Dara",  22, "Male",   "012345678");
         User  user2  = new User("Sokha", 21, "Female", "098765432");
         Staff staff1 = new Staff("Bopha", 30, "Female", "011111111", "Ticket Officer");
 
+        System.out.println("\n=== TEST: OVERRIDING getRoleDescription() ===");
+        System.out.println(user1.getName() + " -> " + user1.getRoleDescription());
+        System.out.println(user2.getName() + " -> " + user2.getRoleDescription());
+        System.out.println(staff1.getName() + " -> " + staff1.getRoleDescription());
+
         system.addUser(user1);
-        system.addUser(user2);
+        system.addUser(user2);   
 
         // ── Create trains ────────────────────────────────────────────────────────
         Train train1 = new Train("Express A", "Phnom Penh", "Battambang",    3, 12.50);
@@ -26,10 +31,8 @@ public class Main {
         system.addTrain(train1);
         system.addTrain(train2);
 
-        // ════════════════════════════════════════════════════════════════════════
         // TEST 1 — toString() on all model objects (NEW)
         // Shows the one-liner output instead of ugly memory addresses
-        // ════════════════════════════════════════════════════════════════════════
         System.out.println("\n=== TEST: toString() ON ALL OBJECTS ===");
         System.out.println(user1);
         System.out.println(user2);
@@ -38,10 +41,8 @@ public class Main {
         System.out.println(train2);
         System.out.println(system);
 
-        // ════════════════════════════════════════════════════════════════════════
         // TEST 2 — OVERLOADED setPhoneNumber() (NEW)
         // Person.setPhoneNumber(String countryCode, String localNumber)
-        // ════════════════════════════════════════════════════════════════════════
         System.out.println("\n=== TEST: OVERLOADED setPhoneNumber() ===");
         user1.setPhoneNumber("+855", "12345678"); // country code + local number
         System.out.println("Updated phone for " + user1.getName() + ": " + user1.getPhoneNumber());

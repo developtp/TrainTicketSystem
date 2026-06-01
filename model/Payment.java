@@ -18,9 +18,7 @@ public class Payment implements Displayable, Payable, Printable {
     private String    paymentMethod;
     private String    paymentStatus;
 
-    // ─── Constructors (OVERLOADED) ────────────────────────────────────────────────
-
-    // VERSION 1 (EXISTING) — amount is calculated automatically from the booking
+    // OVERLOAD 1 — amount auto-calculated from booking
     public Payment(Booking booking, String paymentMethod) {
         this.paymentId     = nextPaymentId++;
         this.booking       = booking;
@@ -31,17 +29,23 @@ public class Payment implements Displayable, Payable, Printable {
         paymentCount++;
     }
 
-    // VERSION 2 (NEW OVERLOAD) — caller can override the amount manually
-    // Useful for discounts, partial payments, or adjusted fares
-    // Example: new Payment(booking, "ABA", 8.00)  →  discounted amount
+    // OVERLOAD 2 — caller provides a custom amount (e.g. adjusted fare)
     public Payment(Booking booking, String paymentMethod, double customAmount) {
-        this(booking, paymentMethod); // delegates to VERSION 1
+        this(booking, paymentMethod);
         if (customAmount > 0) {
-            this.amount = customAmount; // override the auto-calculated amount
+            this.amount = customAmount;
         }
     }
 
-    // ─── Helper ──────────────────────────────────────────────────────────────────
+    // OVERLOAD 3 — apply a percentage discount off the base fare
+    // Example: new Payment(booking, "ABA", 10)  →  10% off
+    public Payment(Booking booking, String paymentMethod, int discountPercent) {
+        this(booking, paymentMethod);
+        if (discountPercent > 0 && discountPercent <= 100) {
+            this.amount = this.amount * (1.0 - discountPercent / 100.0);
+        }
+    }
+
     private String cleanText(String value, String defaultValue) {
         if (value == null || value.trim().isEmpty()) return defaultValue;
         return value.trim();
@@ -51,16 +55,15 @@ public class Payment implements Displayable, Payable, Printable {
         return (booking == null) ? 0 : booking.calculateAmount();
     }
 
-    // ─── Getters ─────────────────────────────────────────────────────────────────
     public int       getPaymentId()     { return paymentId; }
     public Booking   getBooking()       { return booking; }
     public double    getAmount()        { return amount; }
-    public double    getTotalPrice()    { return amount; } // legacy alias
+    public double    getTotalPrice()    { return amount; }
     public LocalDate getPaymentDate()   { return paymentDate; }
     public String    getPaymentMethod() { return paymentMethod; }
     public String    getPaymentStatus() { return paymentStatus; }
 
-    // ─── Payable interface overrides (EXISTING) ───────────────────────────────────
+    // OVERRIDE — Payable interface
     @Override
     public boolean pay() {
         if (booking == null) {
@@ -85,12 +88,13 @@ public class Payment implements Displayable, Payable, Printable {
         return true;
     }
 
+    // OVERRIDE — Payable interface
     @Override
     public boolean isPaid() {
         return "Paid".equalsIgnoreCase(paymentStatus);
     }
 
-    // ─── displayInfo() override (EXISTING) ───────────────────────────────────────
+    // OVERRIDE — Displayable interface
     @Override
     public void displayInfo() {
         System.out.println("\n========== Payment Detail ==========");
@@ -107,7 +111,7 @@ public class Payment implements Displayable, Payable, Printable {
         System.out.println("====================================");
     }
 
-    // ─── print() override — Printable interface (EXISTING) ───────────────────────
+    // OVERRIDE — Printable interface
     @Override
     public void print() {
         System.out.println("\n========== PAYMENT RECEIPT ==========");
@@ -122,14 +126,12 @@ public class Payment implements Displayable, Payable, Printable {
         System.out.println("=====================================");
     }
 
-    // ─── toString() override (NEW) ───────────────────────────────────────────────
     @Override
     public String toString() {
         return String.format("Payment{id=%d, amount=$%.2f, method='%s', status='%s'}",
                 paymentId, amount, paymentMethod, paymentStatus);
     }
 
-    // ─── equals() override (NEW) ─────────────────────────────────────────────────
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -138,11 +140,14 @@ public class Payment implements Displayable, Payable, Printable {
         return this.paymentId == other.paymentId;
     }
 
-    // ─── hashCode() override (NEW) ───────────────────────────────────────────────
     @Override
     public int hashCode() {
         return Objects.hash(paymentId);
     }
 
     public static int getPaymentCount() { return paymentCount; }
+
+    public void pay(String method) {
+        System.out.println("Payment Method: " + method);
+    }
 }

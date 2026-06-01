@@ -21,12 +21,11 @@ public class Train implements Displayable {
     private ArrayList<Ticket>  tickets;
     private HashSet<String>    reservedSeats;
 
-    // ─── Constructor ─────────────────────────────────────────────────────────────
     public Train(String trainName, String source, String destination,
                  int totalSeats, double ticketPrice) {
-        this.trainId      = nextTrainId++;
-        this.bookings     = new ArrayList<>();
-        this.tickets      = new ArrayList<>();
+        this.trainId       = nextTrainId++;
+        this.bookings      = new ArrayList<>();
+        this.tickets       = new ArrayList<>();
         this.reservedSeats = new HashSet<>();
         trainCount++;
         setTrainName(trainName);
@@ -36,26 +35,23 @@ public class Train implements Displayable {
         setTicketPrice(ticketPrice);
     }
 
-    // ─── Helper ──────────────────────────────────────────────────────────────────
     private String cleanText(String value, String defaultValue) {
         if (value == null || value.trim().isEmpty()) return defaultValue;
         return value.trim();
     }
 
-    // ─── Getters ─────────────────────────────────────────────────────────────────
-    public int    getTrainId()    { return trainId; }
-    public String getTrainName()  { return trainName; }
-    public String getSource()     { return source; }
-    public String getDestination(){ return destination; }
-    public double getTicketPrice(){ return ticketPrice; }
-    public int    getTotalSeats() { return totalSeats; }
+    public int    getTrainId()           { return trainId; }
+    public String getTrainName()         { return trainName; }
+    public String getSource()            { return source; }
+    public String getDestination()       { return destination; }
+    public double getTicketPrice()       { return ticketPrice; }
+    public int    getTotalSeats()        { return totalSeats; }
     public int    getReservedSeatCount() { return reservedSeats.size(); }
 
-    public ArrayList<Booking> getBookingsCopy()     { return new ArrayList<>(bookings); }
-    public ArrayList<Ticket>  getTicketsCopy()      { return new ArrayList<>(tickets); }
-    public HashSet<String>    getReservedSeatsCopy(){ return new HashSet<>(reservedSeats); }
+    public ArrayList<Booking> getBookingsCopy()      { return new ArrayList<>(bookings); }
+    public ArrayList<Ticket>  getTicketsCopy()       { return new ArrayList<>(tickets); }
+    public HashSet<String>    getReservedSeatsCopy() { return new HashSet<>(reservedSeats); }
 
-    // ─── Setters ─────────────────────────────────────────────────────────────────
     public void setTrainName(String trainName) {
         this.trainName = cleanText(trainName, "Unknown Train");
     }
@@ -79,7 +75,6 @@ public class Train implements Displayable {
         this.totalSeats = (totalSeats > 0) ? totalSeats : 0;
     }
 
-    // ─── Booking / Ticket management ─────────────────────────────────────────────
     public boolean addBooking(Booking booking) {
         if (booking == null || bookings.contains(booking)) return false;
         bookings.add(booking);
@@ -92,35 +87,29 @@ public class Train implements Displayable {
         return true;
     }
 
-    // ─── Seat management (OVERLOADED) ────────────────────────────────────────────
-
-    // VERSION 1 (EXISTING) — caller provides a specific seat label e.g. "A1"
+    // OVERLOAD 1 — reserve a specific named seat e.g. "A1"
     public boolean reserveSeat(String seatNumber) {
         if (!isSeatAvailable(seatNumber)) return false;
         reservedSeats.add(seatNumber.trim().toUpperCase());
         return true;
     }
 
-    // VERSION 2 (NEW OVERLOAD) — auto-assigns next available seat label
-    // Use when the passenger doesn't care which seat — system picks for them.
-    // Returns the seat label that was assigned, or null if train is full.
-    // Example: String seat = train.reserveSeat();  →  "S1", "S2", ...
+    // OVERLOAD 2 — auto-assign the next available seat, returns the label
     public String reserveSeat() {
         if (!hasAvailableSeat()) {
             System.out.println("Train is full. No available seats.");
             return null;
         }
-        // Generate seat labels S1, S2, S3 … until we find one not yet taken
         int attempt = reservedSeats.size() + 1;
-        while (attempt <= totalSeats + 1) {          // +1 safety buffer
+        while (attempt <= totalSeats + 1) {
             String autoSeat = "S" + attempt;
             if (!reservedSeats.contains(autoSeat)) {
                 reservedSeats.add(autoSeat);
-                return autoSeat;                     // return assigned label to caller
+                return autoSeat;
             }
             attempt++;
         }
-        return null; // should not reach here, but safe fallback
+        return null;
     }
 
     public boolean hasAvailableSeat() {
@@ -132,7 +121,7 @@ public class Train implements Displayable {
         return hasAvailableSeat() && !reservedSeats.contains(seatNumber.trim().toUpperCase());
     }
 
-    // ─── displayInfo() override (EXISTING) ───────────────────────────────────────
+    // OVERRIDE — Displayable interface (summary view)
     @Override
     public void displayInfo() {
         System.out.println("Train ID       : " + trainId);
@@ -145,7 +134,14 @@ public class Train implements Displayable {
         System.out.println("Tickets        : " + tickets.size());
     }
 
-    // ─── toString() override (NEW) ───────────────────────────────────────────────
+    // OVERLOAD — detailed view that optionally prints reserved seat labels
+    public void displayInfo(boolean showSeats) {
+        displayInfo();
+        if (showSeats) {
+            System.out.println("Reserved Seat Labels: " + reservedSeats);
+        }
+    }
+
     @Override
     public String toString() {
         return String.format("Train{id=%d, name='%s', route='%s->%s', price=$%.2f, seats=%d/%d}",
@@ -153,8 +149,6 @@ public class Train implements Displayable {
                 ticketPrice, reservedSeats.size(), totalSeats);
     }
 
-    // ─── equals() override (NEW) ─────────────────────────────────────────────────
-    // Two Train objects are equal if they share the same trainId.
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -163,7 +157,6 @@ public class Train implements Displayable {
         return this.trainId == other.trainId;
     }
 
-    // ─── hashCode() override (NEW) ───────────────────────────────────────────────
     @Override
     public int hashCode() {
         return Objects.hash(trainId);
