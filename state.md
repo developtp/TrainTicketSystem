@@ -1,8 +1,21 @@
 # TrainTicketSystem — OOP Concept Review & Project State
 
 > Reviewed on: 2026-06-23  
-> Reviewer: Expert Java Code Review  
+> Reviewer: Expert Java Code Review & System Architecture Update  
 > Branch: `main`
+
+---
+
+## Project Overview & Architecture
+
+The Train Ticket System is a console-based railway reservation system written in Java. It is designed using strong Object-Oriented Programming (OOP) principles, clean encapsulation, type-safe enums, and decoupled packages.
+
+A booking-centric architecture is employed where the `Booking` class acts as the central coordinator of transactions:
+1. **User** searches for trains, filters them, or sorts them.
+2. **User** makes a reservation, generating a `Booking` in `PENDING` status.
+3. The booking automatically assigns a seat within the chosen `TicketClass` and calculates the price via the static `PriceCalculator` engine.
+4. **Payment** completes the transaction using a selected `PaymentMethod`, changing the booking status to `CONFIRMED` and automatically issuing a `Ticket`.
+5. At any time, a `PENDING` or `CONFIRMED` booking can be cancelled, releasing the reserved seat back to the train.
 
 ---
 
@@ -10,26 +23,34 @@
 
 ```
 TrainTicketSystem/
+├── enums/
+│   ├── BookingStatus.java             [NEW] - PENDING, CONFIRMED, CANCELLED
+│   ├── PaymentMethod.java             [NEW] - CASH, ABA, WING, KHQR
+│   ├── TicketClass.java               [NEW] - ECONOMY, BUSINESS, FIRST_CLASS
+│   └── TrainType.java                 [NEW] - REGULAR, EXPRESS, LUXURY
 ├── exceptions/
-│   └── TicketIssuanceException.java   [NEW]
+│   └── TicketIssuanceException.java   - Checked exception for guard rail validation
 ├── interfaces/
-│   ├── BookingSearchable.java
-│   ├── Displayable.java
-│   ├── Payable.java
-│   ├── Printable.java
-│   ├── TrainSearchable.java
-│   └── UserSearchable.java
+│   ├── BookingSearchable.java         - Interface contract for searching bookings
+│   ├── Displayable.java               - Interface contract for displaying info
+│   ├── Payable.java                   - Interface contract for payment actions (uses default method)
+│   ├── Printable.java                 - Interface contract for printing ticket/invoice details
+│   ├── TrainSearchable.java           - Interface contract for searching trains
+│   └── UserSearchable.java            - Interface contract for searching users
 ├── model/
-│   ├── Booking.java
-│   ├── Payment.java
-│   ├── Person.java
-│   ├── Staff.java
-│   ├── Ticket.java
-│   ├── Train.java
-│   └── User.java
+│   ├── Booking.java                   [UPDATED] - Booking status, class, and seat control
+│   ├── Payment.java                   [UPDATED] - Encapsulated payment state and validation
+│   ├── Person.java                    [UPDATED] - Now an abstract base class
+│   ├── Route.java                     [NEW] - Departure/destination value object (Displayable)
+│   ├── Staff.java                     - Subclass of Person representing employees
+│   ├── Ticket.java                    [UPDATED] - Encapsulates confirmation, composition, and issueDate
+│   ├── Train.java                     [UPDATED] - Multi-class seat tracker, delegate getters
+│   └── User.java                      [UPDATED] - Subclass of Person representing customers
+├── service/
+│   └── PriceCalculator.java           [NEW] - Centralized price multiplier engine
 └── main/
-    ├── Main.java
-    └── TrainTicketBookingSystem.java
+    ├── Main.java                      [UPDATED] - Interactive 11-option console menu
+    └── TrainTicketBookingSystem.java  [UPDATED] - Central system coordinator (no BookingService)
 ```
 
 ---
@@ -39,14 +60,10 @@ TrainTicketSystem/
 **✅ YES — Correctly and fully implemented**
 
 ### Where
-All model classes: `Person`, `User`, `Staff`, `Train`, `Booking`, `Payment`, `Ticket`,
-and the system class `TrainTicketBookingSystem`.
+All model classes (`Person`, `User`, `Staff`, `Train`, `Booking`, `Payment`, `Ticket`, `Route`), enums, utility services (`PriceCalculator`), and the controller coordinator `TrainTicketBookingSystem`.
 
 ### Why It Qualifies
-Every field is declared `private` (or `protected` in `Person` for subclass access),
-and access is controlled through dedicated `get` / `set` methods. Setters perform
-validation before assigning values — e.g., rejecting negative ages, trimming strings,
-defaulting invalid values — which is the core purpose of encapsulation.
+Every field is declared `private` (or `protected` in `Person` for inherited subclass access), and access is controlled through public getters and setters. Setters perform strict guard validation (e.g., rejecting negative ages, handling empty/null input, matching seat prefixes to their classes, preventing double payment, and returning read-only defensive copies of internal lists).
 
 ### Evidence
 
@@ -54,35 +71,29 @@ defaulting invalid values — which is the core purpose of encapsulation.
 // Person.java — fields hidden, guarded setters
 protected String name;
 protected int    age;
-protected String gender;
-protected String phoneNumber;
 
 public void setAge(int age) {
-    this.age = (age > 0) ? age : 0;          // guard: rejects negatives
+    this.age = (age > 0) ? age : 0;          // guard: rejects negative ages
 }
 
-// Train.java — internal lists exposed only as defensive copies
+// Train.java — internal lists/maps are encapsulated; defensive copies are returned
 private ArrayList<Booking> bookings;
+
 public ArrayList<Booking> getBookingsCopy() {
-    return new ArrayList<>(bookings);         // prevents external mutation
+    return new ArrayList<>(bookings);         // prevents external mutation of system state
 }
 
-// TrainTicketBookingSystem.java
-private HashMap<Integer, User> users;        // private — no direct outside access
-private ArrayList<Train>       trains;
-private ArrayList<Booking>     bookings;
-```
-
-### Issues / Improvements
-`Person`'s fields use `protected` instead of `private`. While this allows subclasses
-(`User`, `Staff`) to access them directly (e.g., `this.name` in `User`), best practice
-is to keep them `private` and let subclasses use the inherited `get`/`set` methods.
-
-```java
-// Recommended fix in Person.java:
-private String name;   // was: protected String name;
-private int    age;    // was: protected int age;
-// Subclasses then call getName() / setName() instead of this.name directly.
+// Route.java — self-contained destination verification
+public void setDestinationStation(String destinationStation) {
+    String cleaned = (destinationStation == null) ? "" : destinationStation.trim();
+    if (cleaned.isEmpty()) {
+        this.destinationStation = "Unknown Destination";
+    } else if (cleaned.equalsIgnoreCase(this.departureStation)) {
+        this.destinationStation = "Invalid Destination"; // prevents circular routes
+    } else {
+        this.destinationStation = cleaned;
+    }
+}
 ```
 
 ---
@@ -92,70 +103,50 @@ private int    age;    // was: protected int age;
 **✅ YES — Correctly implemented**
 
 ### Where
-`User`, `Staff`, `Train`, `Booking`, `Payment`, `Ticket` — all model classes.
+`User`, `Staff`, `Train`, `Booking`, `Payment`, `Ticket` — all model classes; and the service utility `PriceCalculator`.
 
 ### Why It Qualifies
-Two patterns of `static` are correctly used:
-
-**Pattern A — Auto-increment ID counter:**  
-`nextUserId`, `nextTrainId`, `nextBookingId`, etc. are `static` so they are shared
-across all instances, guaranteeing unique IDs.
-
-**Pattern B — Count tracker:**  
-`userCount`, `trainCount`, etc. count how many objects have ever been created,
-accessible without needing an instance.
-
-**Pattern C — Static factory method:**  
-`Ticket.createTicket(...)` is a `static` factory method that validates inputs before
-constructing the object.
+1. **Auto-Increment ID Generators**: `nextUserId`, `nextTrainId`, `nextBookingId`, etc., are class-level variables shared across all instances to guarantee unique serial IDs.
+2. **Count Trackers**: `userCount`, `trainCount`, etc., track total instantiations statically.
+3. **Static Factory Method**: `Ticket.createTicket(...)` validates preconditions before calling the constructor, separating instantiation logic from validation.
+4. **Static Pricing Utility**: `PriceCalculator.calculatePrice(...)` provides global access to business pricing rules without state persistence.
 
 ### Evidence
 
 ```java
-// User.java
-private static int userCount  = 0;
-private static int nextUserId = 1;
-
-public User(String name, ...) {
-    this.userId = nextUserId++;   // unique across all User instances
-    userCount++;
-}
-
-public static int getUserCount() { return userCount; }
-
 // Ticket.java — static factory method
 public static Ticket createTicket(Booking booking, Payment payment, String seatNumber) {
-    if (booking == null) { ... return null; }
-    ...
+    if (booking == null) return null;
+    if (payment == null || !payment.isPaid()) return null;
     return new Ticket(booking, seatNumber);
 }
-```
 
-### Issues / Improvements
-None. Static usage is appropriate and purposeful throughout.
+// PriceCalculator.java — static calculation rules
+private static final double BASE_PRICE = 10.0;
+
+public static double calculatePrice(TrainType trainType, TicketClass ticketClass) {
+    double trainMultiplier = (trainType != null) ? trainType.getPriceMultiplier() : 1.0;
+    double classMultiplier = (ticketClass == TicketClass.BUSINESS) ? 1.75 : (ticketClass == TicketClass.FIRST_CLASS ? 2.5 : 1.0);
+    double raw = BASE_PRICE * trainMultiplier * classMultiplier;
+    return Math.round(raw * 100.0) / 100.0;
+}
+```
 
 ---
 
 ## 3. Interface
 
-**✅ YES — Correctly implemented, actively used**
+**✅ YES — Correctly implemented and actively used**
 
 ### Where
-`interfaces/` package: `Displayable`, `Payable`, `Printable`, `BookingSearchable`,
-`TrainSearchable`, `UserSearchable`.
+`interfaces/` package: `Displayable`, `Payable`, `Printable`, `BookingSearchable`, `TrainSearchable`, `UserSearchable`.
 
 ### Why It Qualifies
-Six interfaces define contracts that are implemented by the model and system classes.
-`Payable` also uses the `default` method keyword (a Java 8+ feature).
+Interfaces define essential behavioral contracts implemented by different domain components. This decouples references—for example, the payment process takes any `Payable` implementation (currently `Payment`), and search operations rely on specific interfaces implemented by `TrainTicketBookingSystem`. `Payable` also utilizes a `default` Java 8+ method to declare fallback logic.
 
 ### Evidence
 
 ```java
-// Displayable.java
-public interface Displayable {
-    void displayInfo();
-}
-
 // Payable.java — with default method
 public interface Payable {
     boolean pay();
@@ -163,27 +154,21 @@ public interface Payable {
     default void processPayment() { pay(); }   // default implementation
 }
 
-// Payment.java — implements multiple interfaces
-public class Payment implements Displayable, Payable, Printable { ... }
-
-// TrainTicketBookingSystem.java — implements 4 interfaces
+// TrainTicketBookingSystem.java — implements search contracts
 public class TrainTicketBookingSystem
     implements Displayable, UserSearchable, TrainSearchable, BookingSearchable { ... }
 ```
 
-### Implementation Map
+### Interface Implementation Map
 
-| Interface          | Implemented By                              |
-|--------------------|---------------------------------------------|
-| `Displayable`      | `Person`, `Train`, `Booking`, `Payment`, `Ticket`, `TrainTicketBookingSystem` |
-| `Payable`          | `Payment`                                   |
-| `Printable`        | `Payment`, `Ticket`                         |
-| `BookingSearchable`| `TrainTicketBookingSystem`                  |
-| `TrainSearchable`  | `TrainTicketBookingSystem`                  |
-| `UserSearchable`   | `TrainTicketBookingSystem`                  |
-
-### Issues / Improvements
-None. Interface usage is clean and well-structured.
+| Interface | Implemented By | Description |
+| :--- | :--- | :--- |
+| `Displayable` | `Person`, `Train`, `Booking`, `Payment`, `Ticket`, `TrainTicketBookingSystem`, `Route` | Forces objects to implement a standard terminal printout format. |
+| `Payable` | `Payment` | Handles checking/execution of payment transactions. |
+| `Printable` | `Payment`, `Ticket` | Prints printable slips like receipts and tickets. |
+| `BookingSearchable`| `TrainTicketBookingSystem` | Contract for querying system bookings. |
+| `TrainSearchable` | `TrainTicketBookingSystem` | Contract for querying system trains. |
+| `UserSearchable` | `TrainTicketBookingSystem` | Contract for querying registered users. |
 
 ---
 
@@ -198,42 +183,23 @@ None. Interface usage is clean and well-structured.
 - `Booking implements Comparable<Booking>`
 
 ### Why It Qualifies
-`Person` is the concrete base class with shared attributes (`name`, `age`, `gender`,
-`phoneNumber`) and shared methods. Both `User` and `Staff` extend `Person`, inheriting
-its fields and methods while adding their own specific fields (`userId`/`bookings`
-and `staffId`/`role` respectively).
+`Person` is the abstract base class that holds common fields (`name`, `age`, `gender`, `phoneNumber`) and shares basic validation logic. `User` (adding `userId` and custom `bookings` collection) and `Staff` (adding `staffId` and `role`) inherit all properties, invoking `super(...)` constructors to delegate initialization logic to the base class.
 
 ### Evidence
 
 ```java
-// User.java
+// User.java — extends Person and Comparable
 public class User extends Person implements Comparable<User> {
     private int userId;
     private ArrayList<Booking> bookings;
 
     public User(String name, int age, String gender, String phoneNumber) {
-        super(name, age, gender, phoneNumber);   // calls Person constructor
+        super(name, age, gender, phoneNumber);   // invokes Person constructor
         this.userId = nextUserId++;
-    }
-}
-
-// Staff.java
-public class Staff extends Person {
-    private int    staffId;
-    private String role;
-
-    public Staff(String name, int age, String gender, String phoneNumber, String role) {
-        super(name, age, gender, phoneNumber);   // calls Person constructor
-        this.staffId = nextStaffId++;
+        this.bookings = new ArrayList<>();
     }
 }
 ```
-
-### Issues / Improvements
-`Person` is a **concrete class** (`public class Person`) rather than an `abstract class`.
-Since `Person` is never instantiated directly in `Main.java`, and both `User` and `Staff`
-must override `displayInfo()`, `Person` should ideally be declared `abstract` to enforce
-this contract (see item 9 below for full details).
 
 ---
 
@@ -242,69 +208,37 @@ this contract (see item 9 below for full details).
 **✅ YES — Correctly implemented with `@Override` annotations**
 
 ### Where
+Subclasses and interface-implementing classes across the project.
 
-| Class       | Method Overridden  | Overrides From       |
-|-------------|-------------------|----------------------|
-| `User`      | `displayInfo()`   | `Person` / `Displayable` |
-| `User`      | `toString()`      | `Object`             |
-| `User`      | `compareTo()`     | `Comparable<User>`   |
-| `User`      | `equals()`        | `Object`             |
-| `User`      | `hashCode()`      | `Object`             |
-| `Staff`     | `displayInfo()`   | `Person` / `Displayable` |
-| `Staff`     | `toString()`      | `Object`             |
-| `Staff`     | `equals()`        | `Object`             |
-| `Staff`     | `hashCode()`      | `Object`             |
-| `Payment`   | `pay()`           | `Payable`            |
-| `Payment`   | `isPaid()`        | `Payable`            |
-| `Payment`   | `displayInfo()`   | `Displayable`        |
-| `Payment`   | `print()`         | `Printable`          |
-| `Ticket`    | `displayInfo()`   | `Displayable`        |
-| `Ticket`    | `print()`         | `Printable`          |
-| `Booking`   | `displayInfo()`   | `Displayable`        |
-| `Booking`   | `compareTo()`     | `Comparable<Booking>`|
-| `Train`     | `displayInfo()`   | `Displayable`        |
-| `TrainTicketBookingSystem` | `displayInfo()` | `Displayable` |
-| `TrainTicketBookingSystem` | `searchUserById()` | `UserSearchable` |
-| `TrainTicketBookingSystem` | `searchTrainById()` | `TrainSearchable` |
-| `TrainTicketBookingSystem` | `searchBookingById()` | `BookingSearchable` |
+### Why It Qualifies
+The `@Override` annotation is consistently used to signal that a method replaces a superclass/interface implementation. Polymorphism invokes the correct subclass method version at runtime based on the actual object type.
 
 ### Evidence
 
 ```java
-// User.java — overrides Person's displayInfo to add user-specific output
-@Override
-public void displayInfo() {
-    System.out.println("User ID       : " + userId);
-    super.displayInfo();                          // calls Person.displayInfo()
-    System.out.println("Total Bookings: " + bookings.size());
-}
-
-// Staff.java — same pattern
-@Override
-public void displayInfo() {
-    System.out.println("Staff ID: " + staffId);
-    super.displayInfo();
-    System.out.println("Role    : " + role);
-}
-```
-
-### Issues / Improvements
-`Person.getRoleDescription()` returns `"General Person"` but is **not** overridden by
-`User` or `Staff`, even though `Main.java` calls it on all three. This means
-`User` and `Staff` both print `"General Person"` instead of a role-specific description.
-This should be overridden:
-
-```java
-// Add to User.java:
+// User.java — overrides abstract method from Person
 @Override
 public String getRoleDescription() {
     return "Registered User";
 }
 
-// Add to Staff.java:
+// User.java — overrides displayInfo() from Person/Displayable
 @Override
-public String getRoleDescription() {
-    return "Staff — " + role;
+public void displayInfo() {
+    System.out.println("User ID       : " + userId);
+    super.displayInfo(); // calls parent Person's displayInfo()
+    System.out.println("Role          : " + getRoleDescription());
+    System.out.println("Total Bookings: " + bookings.size());
+}
+
+// Route.java — overrides Object methods
+@Override
+public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (!(obj instanceof Route)) return false;
+    Route other = (Route) obj;
+    return Objects.equals(this.departureStation, other.departureStation) &&
+           Objects.equals(this.destinationStation, other.destinationStation);
 }
 ```
 
@@ -315,37 +249,24 @@ public String getRoleDescription() {
 **✅ YES — Correctly and extensively implemented**
 
 ### Where
+`Person`, `User`, `Train`, `Booking`, `Payment`, `TrainTicketBookingSystem`.
 
-| Class       | Overloaded Method              | Variants |
-|-------------|-------------------------------|----------|
-| `Person`    | `setPhoneNumber()`            | `(String)` vs `(String, String)` |
-| `User`      | `displayBookingHistory()`     | `()`, `(String status)`, `(int limit)` |
-| `Train`     | `reserveSeat()`               | `(String seatNumber)` vs `()` auto-assign |
-| `Train`     | `displayInfo()`               | `()` vs `(boolean showSeats)` |
-| `Booking`   | Constructor                   | `(User,Train,String)`, `(User,Train,String,String)`, `(User,Train,LocalDate)` |
-| `Payment`   | Constructor                   | `(Booking,String)`, `(Booking,String,double)`, `(Booking,String,int)` |
-| `TrainTicketBookingSystem` | `searchUserBy..()` | `searchUserById(int)` vs `searchUserByName(String)` |
+### Why It Qualifies
+Multiple methods/constructors share the same name but differ in their parameter list (types, number, or order). This allows flexibility in object creation and method invocation (e.g., booking with specific seats vs automatic allocation).
 
 ### Evidence
 
 ```java
-// Person.java
-public void setPhoneNumber(String phoneNumber) { ... }                  // OVERLOAD 1
-public void setPhoneNumber(String countryCode, String localNumber) { .. } // OVERLOAD 2
+// Train.java — three variations of reserveSeat
+public boolean reserveSeat(String seatNumber, TicketClass ticketClass) { ... } // 1. specific seat & class validation
+public boolean reserveSeat(String seatNumber) { ... }                          // 2. legacy single-arg validation (prefix inferred)
+public String reserveSeat(TicketClass ticketClass) { ... }                      // 3. automatic seat allocation returns seat label
 
-// User.java
-public void displayBookingHistory()              { ... }   // all bookings
-public void displayBookingHistory(String status) { ... }   // filter by status
-public void displayBookingHistory(int limit)     { ... }   // last N bookings
-
-// Train.java
-public boolean reserveSeat(String seatNumber) { ... }  // specific seat
-public String  reserveSeat()                  { ... }  // auto-assign
+// Booking.java — constructor overloads
+public Booking(User user, Train train, TicketClass ticketClass, String seatNumber) { ... }
+public Booking(User user, Train train, String travelDate) { ... }               // legacy string date
+public Booking(User user, Train train, LocalDate travelDate) { ... }            // legacy localdate
 ```
-
-### Issues / Improvements
-None. Method overloading is used meaningfully across the project, not just as a
-naming trick.
 
 ---
 
@@ -354,78 +275,55 @@ naming trick.
 **✅ YES — Correctly implemented (both compile-time and runtime)**
 
 ### Where
-**Compile-time (static) polymorphism:** Method overloading (see item 6 above).  
-**Runtime (dynamic) polymorphism:** Interface references and `ArrayList<Displayable>`,
-`ArrayList<Printable>`, `ArrayList<Person>` loops in `Main.java`.
+`Main.java` loops, method arguments, search lookups, interface references.
 
 ### Why It Qualifies
-The same reference type (`Displayable`, `Person`) is used to call `displayInfo()` on
-objects of different concrete types. The JVM resolves which actual implementation to
-call at runtime based on the real object type — this is runtime polymorphism.
+1. **Compile-time Polymorphism**: Method overloading resolves the exact signature at compile time.
+2. **Runtime Polymorphism**: Polymorphic collections and interfaces are declared with high-level types (`Displayable`, `Person`, `Payable`). The program iterates over these interfaces, invoking overridden implementations at runtime without checking the concrete subclass.
 
 ### Evidence
 
 ```java
-// Main.java — runtime polymorphism via Displayable interface
+// Main.java — iterating over polymorphic Displayable types
 ArrayList<Displayable> displayables = new ArrayList<>();
-displayables.add(system);    // TrainTicketBookingSystem.displayInfo()
-displayables.add(user1);     // User.displayInfo()
-displayables.add(staff1);    // Staff.displayInfo()
-displayables.add(train1);    // Train.displayInfo()
-displayables.add(booking1);  // Booking.displayInfo()
-displayables.add(payment1);  // Payment.displayInfo()
-displayables.add(ticket1);   // Ticket.displayInfo()
+displayables.add(user1);      // User (subclass of Person, implements Displayable)
+displayables.add(train1);     // Train (implements Displayable)
+displayables.add(route1);     // Route (implements Displayable)
+displayables.add(booking1);   // Booking (implements Displayable)
 
 for (Displayable item : displayables) {
-    item.displayInfo();   // different method called for each object at runtime
+    item.displayInfo();       // dynamically dispatched to correct class implementation
 }
 
-// Also via Person reference
+// Main.java — iterating over polymorphic Person references
 ArrayList<Person> people = new ArrayList<>();
-people.add(user1);
-people.add(staff1);
-for (Person person : people) {
-    person.displayInfo();  // User or Staff version called at runtime
+people.add(user);
+people.add(staff);
+for (Person p : people) {
+    System.out.println(p.getName() + " is a " + p.getRoleDescription()); // User and Staff return different values
 }
-
-// Also via Payable interface
-Payable payable = payment1;
-payable.isPaid();            // Payment.isPaid() called at runtime
 ```
-
-### Issues / Improvements
-None. Both forms of polymorphism are present and used correctly.
 
 ---
 
 ## 8. Abstraction
 
-**✅ YES — Implemented via interfaces**
+**✅ YES — Implemented via interfaces and abstract classes**
 
 ### Where
-All 6 interfaces in the `interfaces/` package:
-`Displayable`, `Payable`, `Printable`, `BookingSearchable`, `TrainSearchable`, `UserSearchable`.
+All 6 interfaces and the `Person` abstract class.
 
 ### Why It Qualifies
-Abstraction means hiding implementation details and exposing only the essential contract.
-The interfaces define **what** must be done (`displayInfo()`, `pay()`, `print()`, etc.)
-without specifying **how** — that is left to each implementing class. Callers work against
-the interface type and are decoupled from the concrete implementation.
+Abstraction defines **what** operations must be performed rather than **how** they are completed. For instance, `TrainTicketBookingSystem` acts as the service manager implementing the search interfaces; callers only interact with search functions through interface references, hiding internal data storage (`HashMap`, `ArrayList`) from the view layers.
 
 ### Evidence
 
 ```java
-// Caller code in Main.java — works with Payable, not Payment
-Payable payable = payment1;
-system.processPayment(payment1);
-System.out.println("isPaid(): " + payable.isPaid());
-// The caller does not care HOW isPaid() is implemented — just that it returns boolean
+// Payable contract acts as an abstraction for Payments
+Payable payable = payment;
+system.processPayment(payment); // system processes payment polymorphically
+System.out.println("Payment status: " + payable.isPaid());
 ```
-
-### Issues / Improvements
-Abstraction is present via interfaces, but there is **no abstract class** in the project
-(see item 9). Adding `abstract` to `Person` would provide a second, stronger layer of
-abstraction.
 
 ---
 
@@ -435,30 +333,19 @@ abstraction.
 
 ### Where
 [Person.java](file:///Users/phokphallaoudom/Documents/GitHub/TrainTicketSystem/model/Person.java) — declared as an abstract base class.
-[User.java](file:///Users/phokphallaoudom/Documents/GitHub/TrainTicketSystem/model/User.java) and [Staff.java](file:///Users/phokphallaoudom/Documents/GitHub/TrainTicketSystem/model/Staff.java) — subclasses extending the abstract class and implementing the abstract method.
+[User.java](file:///Users/phokphallaoudom/Documents/GitHub/TrainTicketSystem/model/User.java) and [Staff.java](file:///Users/phokphallaoudom/Documents/GitHub/TrainTicketSystem/model/Staff.java) — concrete subclasses.
 
 ### Why It Qualifies
-An abstract class cannot be instantiated directly and is designed to act as a template. `Person` is declared `abstract` and defines the abstract method `public abstract String getRoleDescription();`. Because `User` and `Staff` extend `Person`, they are contractually forced by the compiler to override and implement `getRoleDescription()`.
+`Person` cannot be instantiated directly and serves as a template. It defines the abstract method `public abstract String getRoleDescription();`. The compiler forces all subclasses (`User`, `Staff`) to implement this method or also be declared abstract.
 
 ### Evidence
 
 ```java
-// Person.java — abstract class and method declaration
 public abstract class Person implements Displayable {
-    ...
-    public abstract String getRoleDescription();
-}
-
-// User.java — overriding the abstract method
-@Override
-public String getRoleDescription() {
-    return "Registered User";
-}
-
-// Staff.java — overriding the abstract method
-@Override
-public String getRoleDescription() {
-    return "Staff — " + role;
+    protected String name;
+    protected int age;
+    // ...
+    public abstract String getRoleDescription(); // abstract template method
 }
 ```
 
@@ -466,22 +353,15 @@ public String getRoleDescription() {
 
 ## 10. Exception Handling
 
-**✅ YES — Correctly implemented with a custom checked exception**
+**✅ YES — Correctly implemented with custom checked exception**
 
 ### Where
 - `exceptions/TicketIssuanceException.java` — custom checked exception class
-- `main/TrainTicketBookingSystem.java` — `issueTicket()` method throws it
-- `main/Main.java` — `try-catch` blocks catch and handle it
+- `main/TrainTicketBookingSystem.java` — `issueTicket()` declares `throws`
+- `main/Main.java` — `try-catch` blocks handle errors gracefully.
 
 ### Why It Qualifies
-- `TicketIssuanceException extends Exception` → making it a **checked** exception that the
-  compiler forces callers to handle.
-- `issueTicket()` declares `throws TicketIssuanceException` and uses `throw new
-  TicketIssuanceException(...)` for seven distinct invalid-state conditions.
-- `Main.java` wraps every call to `issueTicket()` in a `try-catch` block with
-  user-friendly messages.
-- No `finally` block is used — correctly justified because no file/stream/resource
-  cleanup is needed.
+A custom checked exception subclassing `Exception` is defined. Methods validating domain rules throw this exception when constraints are violated (e.g., ticket class full, seat prefix mismatch, booking already paid). Callers in the console layer must handle this exception via `try-catch` blocks, preventing the program from crashing and ensuring friendly alerts are displayed.
 
 ### Evidence
 
@@ -489,61 +369,124 @@ public String getRoleDescription() {
 // exceptions/TicketIssuanceException.java
 public class TicketIssuanceException extends Exception {
     public TicketIssuanceException(String message) { super(message); }
-    public TicketIssuanceException(String message, Throwable cause) { super(message, cause); }
 }
 
 // TrainTicketBookingSystem.java
-public Ticket issueTicket(Booking booking, Payment payment, String seatNumber)
+public Ticket issueTicket(Booking booking, Payment payment, String seatNumber) 
         throws TicketIssuanceException {
-    if (booking == null)
+    if (booking == null) 
         throw new TicketIssuanceException("Ticket issuance failed: booking cannot be null.");
     if (!payment.isPaid())
-        throw new TicketIssuanceException("Ticket issuance failed: payment with ID "
-                + payment.getPaymentId() + " is not completed yet.");
+        throw new TicketIssuanceException("Ticket issuance failed: payment is not completed.");
     if (!booking.getTrain().isSeatAvailable(seatNumber))
-        throw new TicketIssuanceException("Ticket issuance failed: seat '"
-                + seatNumber.trim().toUpperCase() + "' is already reserved or unavailable.");
-    // ... more guards ...
+        throw new TicketIssuanceException("Ticket issuance failed: seat is already reserved.");
+    // ...
+    return new Ticket(booking, seatNumber);
 }
 
-// Main.java — try-catch prevents crash, program continues
+// Main.java — Try-Catch handling
 try {
-    ticket1 = system.issueTicket(booking1, payment1, "A1");
+    Ticket ticket = system.issueTicket(booking, payment, seat);
+    ticket.print();
 } catch (TicketIssuanceException e) {
-    System.out.println("User Alert: " + e.getMessage());
-}
-
-// Case 1 — duplicate seat
-try {
-    system.issueTicket(booking1, payment1, "A1");   // seat already taken
-} catch (TicketIssuanceException e) {
-    System.out.println("Exception caught successfully: " + e.getMessage());
-    System.out.println("Program recovered and continues execution.");
+    System.out.println("System Error: " + e.getMessage()); // Graceful error recovery
 }
 ```
 
-### Issues / Improvements
-None. Exception handling is correctly structured and follows best practices.
+---
+
+## Domain Logic & Sub-Systems
+
+### 1. Pricing Engine (`PriceCalculator`)
+The price of a ticket is computed dynamically according to the formula:
+$$\text{Ticket Price} = \text{BASE\_PRICE } (\$10.00) \times \text{TrainType Multiplier} \times \text{TicketClass Multiplier}$$
+
+#### Multiplier Rules:
+- **TrainType**:
+  - `REGULAR`: $1.0\times$
+  - `EXPRESS`: $1.5\times$
+  - `LUXURY` : $2.0\times$
+- **TicketClass**:
+  - `ECONOMY`    : $1.0\times$
+  - `BUSINESS`   : $1.75\times$
+  - `FIRST_CLASS`: $2.5\times$
+
+#### Pricing Matrix Summary:
+| Train Type / Ticket Class | ECONOMY | BUSINESS | FIRST_CLASS |
+| :--- | :--- | :--- | :--- |
+| **REGULAR** (Multiplier: 1.0) | \$10.00 | \$17.50 | \$25.00 |
+| **EXPRESS** (Multiplier: 1.5) | \$15.00 | \$26.25 | \$37.50 |
+| **LUXURY** (Multiplier: 2.0) | \$20.00 | \$35.00 | \$50.00 |
 
 ---
 
-## Summary Table
+### 2. Booking & Ticket Lifecycle
 
-| # | OOP Concept        | Implemented? | Primary Location(s)                                        | Notes |
-|---|--------------------|--------------|------------------------------------------------------------|-------|
-| 1 | **Encapsulation**  | ✅ YES        | All model classes, `TrainTicketBookingSystem`               | All fields are `private`/`protected` with guarded getters & setters. Minor: `Person` fields should be `private` not `protected`. |
-| 2 | **Static**         | ✅ YES        | `User`, `Staff`, `Train`, `Booking`, `Payment`, `Ticket`   | Used for auto-increment IDs, count trackers, and a static factory method (`Ticket.createTicket()`). |
-| 3 | **Interface**      | ✅ YES        | `interfaces/` package (6 interfaces)                       | Defines contracts for displaying, paying, printing, and searching. Includes a `default` method in `Payable`. |
-| 4 | **Inheritance**    | ✅ YES        | `User extends Person`, `Staff extends Person`              | Shared base fields and constructor reuse via `super(...)`. Both subclasses also implement `Comparable`. |
-| 5 | **Method Overriding** | ✅ YES     | `User`, `Staff`, `Payment`, `Ticket`, `Booking`, `Train`, `TrainTicketBookingSystem` | `@Override` on `displayInfo()`, `toString()`, `compareTo()`, `equals()`, `hashCode()`, interface methods, and `getRoleDescription()`. |
-| 6 | **Method Overloading** | ✅ YES    | `Person`, `User`, `Train`, `Booking`, `Payment`, `TrainTicketBookingSystem` | Extensively used: constructors, `setPhoneNumber`, `displayBookingHistory`, `reserveSeat`, `displayInfo`. |
-| 7 | **Polymorphism**   | ✅ YES        | `Main.java` — `ArrayList<Displayable>`, `ArrayList<Person>`, `Payable payable` | Runtime polymorphism via interface/superclass references; compile-time via overloading. |
-| 8 | **Abstraction**    | ✅ YES        | All 6 interfaces in `interfaces/`                          | Interfaces hide implementation. Callers work against contract types, not concrete classes. |
-| 9 | **Abstract Class** | ✅ YES        | `Person` abstract class, `User`, `Staff` subclasses         | `Person` is an abstract class with `public abstract String getRoleDescription()`, overridden by subclasses to define role. |
-| 10 | **Exception Handling** | ✅ YES   | `exceptions/TicketIssuanceException.java`, `TrainTicketBookingSystem.issueTicket()`, `Main.java` | Custom checked exception; `throws` declaration; `try-catch` with user-friendly messages; no `finally` (correctly omitted). |
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING : Create Booking (Seat reserved, price calculated)
+    PENDING --> CANCELLED : Cancel Booking (Seat released)
+    PENDING --> CONFIRMED : Pay for Booking (Auto-issues Ticket)
+    CONFIRMED --> CANCELLED : Cancel Booking (Seat released)
+    CANCELLED --> [*]
+```
+
+- **PENDING**: Initial state. A seat is held, and the price is calculated, but no ticket is active.
+- **CONFIRMED**: Payment successfully processed. A `Ticket` object is created with an `issueDate`.
+- **CANCELLED**: The booking is canceled. The seat is released back to the train's available capacity.
 
 ---
 
-## Required Fix Summary
+### 3. Seat Allocation & Class Capacity
+Seats are validated by prefix character:
+- `ECONOMY`: Prefix `E` (e.g., `E1`, `E2`)
+- `BUSINESS`: Prefix `B` (e.g., `B1`, `B2`)
+- `FIRST_CLASS`: Prefix `F` (e.g., `F1`, `F2`)
 
-All **10 of 10** OOP concepts are now correctly and verifiably implemented. No further fixes are needed. The project compiles successfully and runs correctly.
+When booking:
+- The system checks if the seat label matches the prefix of the selected `TicketClass`.
+- It verifies that the train has not exceeded the maximum capacity for that specific class.
+- The train supports auto-assigning the next available numbered seat (e.g., finding the first unreserved seat with prefix `E` for `ECONOMY`).
+
+---
+
+## Interactive Console Menu & Seed Data
+
+The user interfaces with the application through `Main.java` using a command line menu system containing the following options:
+
+1. **Register User**: Registers a new customer under the system.
+2. **View All Trains**: Displays all active trains, routes, types, base price, and capacity profiles.
+3. **Search Train By Route**: Filters trains matching a specified Departure and Destination station.
+4. **Filter Trains**: Filters the list of trains by `TrainType` (Regular, Express, Luxury) or seat class availability (`ECONOMY`, `BUSINESS`, `FIRST_CLASS`).
+5. **Sort Trains**: Sorts trains by Economy Base Price (ascending), Total Available Seats (descending), or Train Type (Regular → Express → Luxury).
+6. **Create Booking**: reserves a seat (custom or auto-assigned) for a registered user on a train, moving the status to `PENDING`.
+7. **Make Payment**: Processes a payment for a `PENDING` booking using `CASH`, `ABA`, `WING`, or `KHQR`, updating the status to `CONFIRMED` and automatically generating a ticket.
+8. **Cancel Booking**: Cancels a `PENDING` or `CONFIRMED` booking, freeing up the reserved seat.
+9. **View My Bookings**: Prints the booking history of a registered user.
+10. **View Ticket**: Displays details of a ticket issued for a booking.
+11. **Exit**: Terminates the application.
+
+### Pre-loaded Seed Data (Trains)
+The application starts pre-seeded with the following 5 train setups:
+1. **Star Express** — `EXPRESS` train from **Phnom Penh** to **Siem Reap**. Capacity: 30 Economy, 10 Business, 5 First Class.
+2. **Kingdom Rail** — `REGULAR` train from **Phnom Penh** to **Battambang**. Capacity: 40 Economy, 15 Business, 5 First Class.
+3. **Royal Luxury** — `LUXURY` train from **Siem Reap** to **Sihanoukville**. Capacity: 20 Economy, 10 Business, 5 First Class.
+4. **Mekong Express** — `EXPRESS` train from **Phnom Penh** to **Kampot**. Capacity: 25 Economy, 10 Business, 5 First Class.
+5. **Local Shuttle** — `REGULAR` train from **Battambang** to **Poipet**. Capacity: 50 Economy, 0 Business, 0 First Class.
+
+---
+
+## OOP Concept Summary Table
+
+| # | OOP Concept | Implemented? | Primary Location(s) | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | **Encapsulation** | ✅ YES | All model classes, enums, `PriceCalculator`, `TrainTicketBookingSystem` | All fields are private/protected; validation occurs in constructors/setters. |
+| 2 | **Static** | ✅ YES | `User`, `Staff`, `Train`, `Booking`, `Payment`, `Ticket`, `PriceCalculator` | Auto-increment IDs, count trackers, static factory method (`Ticket.createTicket()`), static calculator logic. |
+| 3 | **Interface** | ✅ YES | `interfaces/` (6 files), `Payment`, `TrainTicketBookingSystem`, `Route` | Contract layouts defining display, print, pay, and search actions. |
+| 4 | **Inheritance** | ✅ YES | `User extends Person`, `Staff extends Person` | Extends attributes and behavior. Uses superclass constructors via `super(...)`. |
+| 5 | **Method Overriding** | ✅ YES | Models, `Route`, `TrainTicketBookingSystem` | `@Override` overrides methods like `displayInfo()`, `toString()`, `equals()`, `hashCode()`. |
+| 6 | **Method Overloading** | ✅ YES | `Person`, `User`, `Train`, `Booking`, `Payment`, `TrainTicketBookingSystem` | Multi-signature constructors and reservation/search methods. |
+| 7 | **Polymorphism** | ✅ YES | `Main.java` arrays, parameters | Interface references (`Displayable`, `Payable`) and abstract base references (`Person`) resolve implementations at runtime. |
+| 8 | **Abstraction** | ✅ YES | All 6 interfaces in `interfaces/` | Interfaces decouple calling code from internal collection storage/logic. |
+| 9 | **Abstract Class** | ✅ YES | `Person` abstract class, `User`, `Staff` subclasses | `Person` defines `public abstract String getRoleDescription()`, forcing subclasses to implement role logic. |
+| 10 | **Exception Handling** | ✅ YES | `TicketIssuanceException`, `TrainTicketBookingSystem.issueTicket()`, `Main` | Checked exception for flow checks, handled using `try-catch` structures. |

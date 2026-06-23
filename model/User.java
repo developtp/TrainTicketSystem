@@ -52,7 +52,7 @@ public class User extends Person implements Comparable<User> {
                 + " [status = " + statusFilter + "]:");
         boolean found = false;
         for (Booking booking : bookings) {
-            if (booking.getStatus().equalsIgnoreCase(statusFilter)) {
+            if (booking.getStatus().name().equalsIgnoreCase(statusFilter)) {
                 booking.displayInfo();
                 found = true;
             }
