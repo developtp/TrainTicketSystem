@@ -431,65 +431,36 @@ abstraction.
 
 ## 9. Abstract Class
 
-**❌ NO — Not implemented**
+**✅ YES — Correctly implemented**
 
 ### Where
-`Person.java` — the most logical candidate — is declared as a plain **concrete class**:
-```java
-public class Person implements Displayable { ... }  // ← should be abstract
-```
+[Person.java](file:///Users/phokphallaoudom/Documents/GitHub/TrainTicketSystem/model/Person.java) — declared as an abstract base class.
+[User.java](file:///Users/phokphallaoudom/Documents/GitHub/TrainTicketSystem/model/User.java) and [Staff.java](file:///Users/phokphallaoudom/Documents/GitHub/TrainTicketSystem/model/Staff.java) — subclasses extending the abstract class and implementing the abstract method.
 
-### Why It Is Missing
-An abstract class is a class that:
-1. Cannot be instantiated directly
-2. May contain abstract methods that subclasses **must** implement
+### Why It Qualifies
+An abstract class cannot be instantiated directly and is designed to act as a template. `Person` is declared `abstract` and defines the abstract method `public abstract String getRoleDescription();`. Because `User` and `Staff` extend `Person`, they are contractually forced by the compiler to override and implement `getRoleDescription()`.
 
-In this project `Person` is **never instantiated on its own** — only `User` and `Staff`
-are created. `Person` has a `getRoleDescription()` method that returns the generic
-`"General Person"`, but `User` and `Staff` do **not** override it (confirmed above),
-meaning the compiler cannot enforce this contract. Making `Person` abstract and
-`getRoleDescription()` an abstract method would fix both issues at once.
-
-### What Needs to Change
+### Evidence
 
 ```java
-// Person.java — make it abstract
+// Person.java — abstract class and method declaration
 public abstract class Person implements Displayable {
-
-    protected String name;
-    protected int    age;
-    protected String gender;
-    protected String phoneNumber;
-
-    public Person(String name, int age, String gender, String phoneNumber) {
-        setName(name);
-        setAge(age);
-        setGender(gender);
-        setPhoneNumber(phoneNumber);
-    }
-
-    // Abstract method — every subclass MUST provide its own description
+    ...
     public abstract String getRoleDescription();
-
-    // ... rest of Person unchanged
 }
 
-// User.java — now MUST override getRoleDescription()
+// User.java — overriding the abstract method
 @Override
 public String getRoleDescription() {
     return "Registered User";
 }
 
-// Staff.java — now MUST override getRoleDescription()
+// Staff.java — overriding the abstract method
 @Override
 public String getRoleDescription() {
     return "Staff — " + role;
 }
 ```
-
-> [!IMPORTANT]
-> Without this change, `abstract class` is not implemented anywhere in the project.
-> This is the only OOP concept from the required list that is currently missing.
 
 ---
 
@@ -564,36 +535,15 @@ None. Exception handling is correctly structured and follows best practices.
 | 2 | **Static**         | ✅ YES        | `User`, `Staff`, `Train`, `Booking`, `Payment`, `Ticket`   | Used for auto-increment IDs, count trackers, and a static factory method (`Ticket.createTicket()`). |
 | 3 | **Interface**      | ✅ YES        | `interfaces/` package (6 interfaces)                       | Defines contracts for displaying, paying, printing, and searching. Includes a `default` method in `Payable`. |
 | 4 | **Inheritance**    | ✅ YES        | `User extends Person`, `Staff extends Person`              | Shared base fields and constructor reuse via `super(...)`. Both subclasses also implement `Comparable`. |
-| 5 | **Method Overriding** | ✅ YES     | `User`, `Staff`, `Payment`, `Ticket`, `Booking`, `Train`, `TrainTicketBookingSystem` | `@Override` on `displayInfo()`, `toString()`, `compareTo()`, `equals()`, `hashCode()`, interface methods. `getRoleDescription()` is NOT overridden — needs fix. |
+| 5 | **Method Overriding** | ✅ YES     | `User`, `Staff`, `Payment`, `Ticket`, `Booking`, `Train`, `TrainTicketBookingSystem` | `@Override` on `displayInfo()`, `toString()`, `compareTo()`, `equals()`, `hashCode()`, interface methods, and `getRoleDescription()`. |
 | 6 | **Method Overloading** | ✅ YES    | `Person`, `User`, `Train`, `Booking`, `Payment`, `TrainTicketBookingSystem` | Extensively used: constructors, `setPhoneNumber`, `displayBookingHistory`, `reserveSeat`, `displayInfo`. |
 | 7 | **Polymorphism**   | ✅ YES        | `Main.java` — `ArrayList<Displayable>`, `ArrayList<Person>`, `Payable payable` | Runtime polymorphism via interface/superclass references; compile-time via overloading. |
 | 8 | **Abstraction**    | ✅ YES        | All 6 interfaces in `interfaces/`                          | Interfaces hide implementation. Callers work against contract types, not concrete classes. |
-| 9 | **Abstract Class** | ❌ NO         | `Person` should be abstract — currently is a concrete class | `Person` is never instantiated directly. Should be `abstract` with `abstract String getRoleDescription()` to enforce subclass override. |
+| 9 | **Abstract Class** | ✅ YES        | `Person` abstract class, `User`, `Staff` subclasses         | `Person` is an abstract class with `public abstract String getRoleDescription()`, overridden by subclasses to define role. |
 | 10 | **Exception Handling** | ✅ YES   | `exceptions/TicketIssuanceException.java`, `TrainTicketBookingSystem.issueTicket()`, `Main.java` | Custom checked exception; `throws` declaration; `try-catch` with user-friendly messages; no `finally` (correctly omitted). |
 
 ---
 
 ## Required Fix Summary
 
-Only **one fix** is needed to complete all 10 OOP concepts:
-
-### Fix: Implement Abstract Class in `Person.java`
-
-```java
-// 1. Change Person to abstract
-public abstract class Person implements Displayable {
-    // 2. Declare getRoleDescription() as abstract
-    public abstract String getRoleDescription();
-    // rest of Person unchanged...
-}
-
-// 3. Add override to User.java
-@Override
-public String getRoleDescription() { return "Registered User"; }
-
-// 4. Add override to Staff.java
-@Override
-public String getRoleDescription() { return "Staff — " + role; }
-```
-
-After this fix, all **10 of 10** OOP concepts will be correctly and verifiably implemented.
+All **10 of 10** OOP concepts are now correctly and verifiably implemented. No further fixes are needed. The project compiles successfully and runs correctly.

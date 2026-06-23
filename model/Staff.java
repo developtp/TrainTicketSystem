@@ -52,5 +52,10 @@ public class Staff extends Person {
         return Objects.hash(staffId);
     }
 
+    @Override
+    public String getRoleDescription() {
+        return "Staff — " + role;
+    }
+
     public static int getStaffCount() { return staffCount; }
 }

@@ -109,5 +109,10 @@ public class User extends Person implements Comparable<User> {
         return Objects.hash(userId);
     }
 
+    @Override
+    public String getRoleDescription() {
+        return "Registered User";
+    }
+
     public static int getUserCount() { return userCount; }
 }
