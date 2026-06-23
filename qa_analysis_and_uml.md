@@ -418,3 +418,111 @@ deactivate System
 Menu --> User: Display "Booking cancelled successfully"
 @enduml
 ```
+
+#### F. Complete End-to-End Sequence Diagram
+
+```plantuml
+@startuml
+actor User
+participant "Main (Menu)" as Menu
+participant "TrainTicketBookingSystem" as System
+participant "User (Object)" as UserObj
+participant "Train" as Train
+participant "PriceCalculator" as PriceCalc
+participant "Booking (Object)" as BookingObj
+participant "Payment (Object)" as PaymentObj
+participant "Ticket (Object)" as TicketObj
+
+== 1. Register User ==
+User -> Menu: Select "Register User"
+Menu -> Menu: Prompt for name, age, gender, phone
+Menu -> UserObj **: new User(name, age, gender, phone)
+Menu -> System: addUser(user)
+activate System
+System -> System: Store in users Map
+System --> Menu: return success
+deactivate System
+Menu --> User: Display "User registered successfully"
+
+== 2. Search Train By Route ==
+User -> Menu: Select "Search Train By Route"
+Menu -> System: searchTrainByRoute(dep, dest)
+activate System
+loop for each Train in trains
+    System -> Train: getRoute()
+    Train --> System: Route
+    alt Route matches dep & dest
+        System -> System: add Train to List
+    end
+end
+System --> Menu: return List<Train>
+deactivate System
+Menu --> User: Display matching trains
+
+== 3. Create Booking ==
+User -> Menu: Select "Create Booking"
+Menu -> System: searchUserById(userId)
+System --> Menu: User object
+Menu -> System: searchTrainById(trainId)
+System --> Menu: Train object
+Menu -> Menu: Prompt for TicketClass & Seat pref
+Menu -> Train: reserveSeat(seat, ticketClass)
+activate Train
+Train -> Train: Check class capacity & prefix
+Train --> Menu: return true (success)
+deactivate Train
+Menu -> BookingObj **: new Booking(user, train, ticketClass, seat)
+activate BookingObj
+BookingObj -> PriceCalc: calculatePrice(trainType, ticketClass)
+activate PriceCalc
+PriceCalc --> BookingObj: price
+deactivate PriceCalc
+BookingObj --> Menu: return Booking (PENDING)
+deactivate BookingObj
+Menu -> System: createBooking(booking)
+System --> Menu: return success
+Menu --> User: Display "Booking created (PENDING)"
+
+== 4. Make Payment ==
+User -> Menu: Select "Make Payment"
+Menu -> System: searchBookingById(bookingId)
+System --> Menu: Booking object
+Menu -> Menu: Prompt for PaymentMethod
+Menu -> PaymentObj **: new Payment(booking, method)
+Menu -> System: processPayment(payment)
+activate System
+System -> PaymentObj: isPaid()
+PaymentObj --> System: true
+System -> BookingObj: confirmBooking()
+activate BookingObj
+BookingObj -> BookingObj: set status = CONFIRMED
+BookingObj --> System: void
+deactivate BookingObj
+System -> TicketObj **: Ticket.createTicket(booking, payment, seat)
+System -> System: Add Ticket to tracking list
+System --> Menu: return true
+deactivate System
+Menu --> User: Display "Payment successful & Ticket issued"
+
+== 5. Cancel Booking ==
+User -> Menu: Select "Cancel Booking"
+Menu -> System: searchBookingById(bookingId)
+System --> Menu: Booking object
+Menu -> System: cancelBooking(bookingId)
+activate System
+System -> BookingObj: cancelBooking()
+activate BookingObj
+BookingObj -> BookingObj: set status = CANCELLED
+BookingObj -> BookingObj: getTrain()
+BookingObj --> Train: releaseSeat(seatNumber)
+activate Train
+Train -> Train: Remove seat from reserved sets
+Train --> BookingObj: void
+deactivate Train
+BookingObj --> System: void
+deactivate BookingObj
+System --> Menu: return true
+deactivate System
+Menu --> User: Display "Booking cancelled successfully"
+@enduml
+```
