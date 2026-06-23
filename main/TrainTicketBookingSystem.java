@@ -4,6 +4,7 @@ import interfaces.BookingSearchable;
 import interfaces.Displayable;
 import interfaces.TrainSearchable;
 import interfaces.UserSearchable;
+import exceptions.TicketIssuanceException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -134,12 +135,38 @@ public class TrainTicketBookingSystem implements Displayable, UserSearchable, Tr
         return false;
     }
 
-    public Ticket issueTicket(Booking booking, Payment payment, String seatNumber) {
-        Ticket ticket = Ticket.createTicket(booking, payment, seatNumber);
-        if (ticket != null) {
-            tickets.add(ticket);
-            System.out.println("Ticket " + ticket.getTicketId() + " issued successfully.");
+    public Ticket issueTicket(Booking booking, Payment payment, String seatNumber) throws TicketIssuanceException {
+        if (booking == null) {
+            throw new TicketIssuanceException("Ticket issuance failed: booking cannot be null.");
         }
+        if (payment == null) {
+            throw new TicketIssuanceException("Ticket issuance failed: payment cannot be null.");
+        }
+        if (!payment.isPaid()) {
+            throw new TicketIssuanceException("Ticket issuance failed: payment with ID " + payment.getPaymentId() + " is not completed yet.");
+        }
+        if (payment.getBooking() != booking) {
+            throw new TicketIssuanceException("Ticket issuance failed: payment does not belong to the booking.");
+        }
+        if (!booking.isConfirmed()) {
+            throw new TicketIssuanceException("Ticket issuance failed: booking " + booking.getBookingId() + " is not confirmed.");
+        }
+        if (booking.getTrain() == null) {
+            throw new TicketIssuanceException("Ticket issuance failed: booking has no associated train.");
+        }
+        if (seatNumber == null || seatNumber.trim().isEmpty()) {
+            throw new TicketIssuanceException("Ticket issuance failed: seat number cannot be null or empty.");
+        }
+        if (!booking.getTrain().isSeatAvailable(seatNumber)) {
+            throw new TicketIssuanceException("Ticket issuance failed: seat '" + seatNumber.trim().toUpperCase() + "' is already reserved or unavailable.");
+        }
+
+        Ticket ticket = Ticket.createTicket(booking, payment, seatNumber);
+        if (ticket == null) {
+            throw new TicketIssuanceException("Ticket issuance failed: ticket creation failed internally.");
+        }
+        tickets.add(ticket);
+        System.out.println("Ticket " + ticket.getTicketId() + " issued successfully.");
         return ticket;
     }
 

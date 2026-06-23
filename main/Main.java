@@ -1,5 +1,6 @@
 package main;
 
+import exceptions.TicketIssuanceException;
 import interfaces.Displayable;
 import interfaces.Payable;
 import interfaces.Printable;
@@ -101,8 +102,38 @@ public class Main {
             system.processPayment(payment1);
             System.out.println("isPaid(): " + payable.isPaid());
 
-            Ticket ticket1 = system.issueTicket(booking1, payment1, "A1");
-            System.out.println("Ticket toString: " + ticket1); // NEW — uses our toString()
+            Ticket ticket1 = null;
+            try {
+                System.out.println("Attempting to issue ticket for seat 'A1'...");
+                ticket1 = system.issueTicket(booking1, payment1, "A1");
+                System.out.println("Ticket toString: " + ticket1); // NEW — uses our toString()
+            } catch (TicketIssuanceException e) {
+                System.out.println("User Alert: " + e.getMessage());
+            }
+
+            // ── Demonstration of exception handling with invalid inputs (preventing crashes) ──
+            System.out.println("\n=== TEST: EXCEPTION HANDLING & PROGRAM CONTINUATION ===");
+            
+            // 1. Attempting to issue a ticket with duplicate seat reservation
+            try {
+                System.out.println("Case 1: Attempting to reserve the same seat 'A1' on the same train...");
+                system.issueTicket(booking1, payment1, "A1");
+            } catch (TicketIssuanceException e) {
+                System.out.println("Exception caught successfully: " + e.getMessage());
+                System.out.println("Program recovered and continues execution.");
+            }
+
+            // 2. Attempting to issue a ticket for an unpaid booking
+            try {
+                System.out.println("\nCase 2: Attempting to issue a ticket for an unpaid booking...");
+                Booking unpaidBooking = new Booking(foundUser, foundTrain, "2026-07-15");
+                system.createBooking(unpaidBooking);
+                Payment unpaidPayment = new Payment(unpaidBooking, "ABA"); // Unpaid by default
+                system.issueTicket(unpaidBooking, unpaidPayment, "A2");
+            } catch (TicketIssuanceException e) {
+                System.out.println("Exception caught successfully: " + e.getMessage());
+                System.out.println("Program recovered and continues execution.");
+            }
 
             // ── OVERLOADED displayBookingHistory() tests (NEW) ──────────────────
             System.out.println("\n=== TEST: OVERLOADED displayBookingHistory() ===");

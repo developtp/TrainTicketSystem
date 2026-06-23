@@ -3,7 +3,7 @@ package model;
 import interfaces.Displayable;
 import java.util.Objects;
 
-public class Person implements Displayable {
+public abstract class Person implements Displayable {
 
     protected String name;
     protected int age;
@@ -81,7 +81,5 @@ public class Person implements Displayable {
     public int hashCode() {
         return Objects.hash(name, phoneNumber);
     }
-    public String getRoleDescription() {
-        return "General Person";
-    }
+    public abstract String getRoleDescription();
 }
