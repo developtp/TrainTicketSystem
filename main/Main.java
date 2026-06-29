@@ -1,10 +1,8 @@
 package main;
 
-import enums.BookingStatus;
 import enums.PaymentMethod;
 import enums.TicketClass;
 import enums.TrainType;
-import exceptions.TicketIssuanceException;
 import java.util.List;
 import java.util.Scanner;
 import model.Booking;
@@ -38,7 +36,7 @@ public class Main {
     // ENTRY POINT
     // ═══════════════════════════════════════════════════════════════════════════════
     public static void main(String[] args) {
-        system = new TrainTicketBookingSystem("CAM Train Booking");
+        system = new TrainTicketBookingSystem("Train Booking");
         sc     = new Scanner(System.in);
 
         seedData();       // pre-load sample trains
