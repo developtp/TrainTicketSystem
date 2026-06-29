@@ -91,16 +91,6 @@ Below is the status of the 10 learning milestones designed to review OOP concept
 
 ---
 
-## Skills Demonstrated
-
-* **Robust Class Modeling**: Translating domain operations into cohesive classes with proper relationships (association, composition, inheritance).
-* **Defensive Programming**: Copying collections returned to caller contexts (`getBookingsCopy()`) and validating string contents (trimming and null default guards).
-* **Interface-Driven Design**: Using decoupling mechanisms to ensure systems can process different types of displayable or printable objects cleanly.
-* **Custom Checked Exceptions**: Defining clear failure boundaries in business actions to prevent runtime crashes and allow programmatic recovery.
-* **Standard Object Contracts**: Implementing standard Java methods (`toString`, `equals`, `hashCode`, `Comparable`) for correct data structures integration (e.g. `HashSet`, `HashMap`).
-
----
-
 ## Current Progress
 
 * **Status**: 100% Completed
