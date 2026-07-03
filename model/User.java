@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
 
-public class User extends Person implements Comparable<User> {
+public class User extends Person {
 
     private int userId;
     private ArrayList<Booking> bookings;
@@ -19,8 +19,7 @@ public class User extends Person implements Comparable<User> {
         userCount++;
     }
 
-    public int getUserId()             { return userId; }
-    public int getBookingHistorySize() { return bookings.size(); }
+    public int getUserId() { return userId; }
 
     public ArrayList<Booking> getBookingsCopy() {
         return new ArrayList<>(bookings);
@@ -32,7 +31,7 @@ public class User extends Person implements Comparable<User> {
         }
     }
 
-    // OVERLOAD 1 — show ALL bookings (sorted by travel date)
+    // Shows all bookings, earliest travel date first — relies on Booking's Comparable.
     public void displayBookingHistory() {
         System.out.println("\nBooking History for " + name + ":");
         if (bookings.isEmpty()) {
@@ -43,35 +42,6 @@ public class User extends Person implements Comparable<User> {
         Collections.sort(sorted);
         for (Booking booking : sorted) {
             booking.displayInfo();
-        }
-    }
-
-    // OVERLOAD 2 — filter by status: "Pending", "Confirmed", "Cancelled"
-    public void displayBookingHistory(String statusFilter) {
-        System.out.println("\nBooking History for " + name
-                + " [status = " + statusFilter + "]:");
-        boolean found = false;
-        for (Booking booking : bookings) {
-            if (booking.getStatus().name().equalsIgnoreCase(statusFilter)) {
-                booking.displayInfo();
-                found = true;
-            }
-        }
-        if (!found) {
-            System.out.println("  No bookings with status: " + statusFilter);
-        }
-    }
-
-    // OVERLOAD 3 — show only the most recent N bookings
-    public void displayBookingHistory(int limit) {
-        System.out.println("\nLast " + limit + " booking(s) for " + name + ":");
-        if (bookings.isEmpty()) {
-            System.out.println("  No bookings yet.");
-            return;
-        }
-        int start = Math.max(0, bookings.size() - limit);
-        for (int i = start; i < bookings.size(); i++) {
-            bookings.get(i).displayInfo();
         }
     }
 
@@ -88,12 +58,6 @@ public class User extends Person implements Comparable<User> {
     public String toString() {
         return String.format("User{id=%d, bookings=%d, base=[%s]}",
                 userId, bookings.size(), super.toString());
-    }
-
-    // OVERRIDE — sort Users alphabetically by name
-    @Override
-    public int compareTo(User other) {
-        return this.name.compareTo(other.name);
     }
 
     @Override

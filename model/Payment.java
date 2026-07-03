@@ -9,13 +9,7 @@ import java.util.Objects;
 
 /**
  * Processes payment for a Booking.
- *
- * OOP concepts demonstrated here:
- *   - Encapsulation  : all fields private
- *   - Static         : nextPaymentId, paymentCount
- *   - Overloading    : three constructors
- *   - Overriding     : pay(), isPaid(), displayInfo(), print(), toString()
- *   - Interface      : implements Displayable, Payable, Printable
+ * Implements Payable/Printable/Displayable — three separate interface contracts.
  *
  * Guards:
  *   1. Cannot pay a cancelled booking.
@@ -39,7 +33,7 @@ public class Payment implements Displayable, Payable, Printable {
     private PaymentMethod paymentMethod;
     private String        paymentStatus;
 
-    // ─── OVERLOAD 1 — amount auto-calculated from booking ────────────────────────
+    // Amount is auto-calculated from the booking's price — caller never sets it directly.
     public Payment(Booking booking, PaymentMethod paymentMethod) {
         this.paymentId     = nextPaymentId++;
         this.booking       = booking;
@@ -50,25 +44,10 @@ public class Payment implements Displayable, Payable, Printable {
         paymentCount++;
     }
 
-    // ─── OVERLOAD 2 — legacy String-based method name (for backward compat) ──────
-    // Old code: new Payment(booking, "ABA") still compiles by mapping to PaymentMethod
-    public Payment(Booking booking, String paymentMethodStr) {
-        this(booking, parseMethod(paymentMethodStr));
-    }
-
-    // ─── OVERLOAD 3 — apply a percentage discount off the booking price ──────────
-    public Payment(Booking booking, PaymentMethod paymentMethod, int discountPercent) {
-        this(booking, paymentMethod);
-        if (discountPercent > 0 && discountPercent <= 100) {
-            this.amount = this.amount * (1.0 - discountPercent / 100.0);
-        }
-    }
-
     // ─── Getters ─────────────────────────────────────────────────────────────────
     public int           getPaymentId()     { return paymentId; }
     public Booking       getBooking()       { return booking; }
     public double        getAmount()        { return amount; }
-    public double        getTotalPrice()    { return amount; }
     public LocalDate     getPaymentDate()   { return paymentDate; }
     public PaymentMethod getPaymentMethod() { return paymentMethod; }
     public String        getPaymentStatus() { return paymentStatus; }
@@ -160,16 +139,4 @@ public class Payment implements Displayable, Payable, Printable {
     }
 
     public static int getPaymentCount() { return paymentCount; }
-
-    // ─── Private helpers ──────────────────────────────────────────────────────────
-    /** Maps a raw String to a PaymentMethod enum (used for backward compat). */
-    private static PaymentMethod parseMethod(String raw) {
-        if (raw == null) return PaymentMethod.CASH;
-        switch (raw.trim().toUpperCase()) {
-            case "ABA":   return PaymentMethod.ABA;
-            case "WING":  return PaymentMethod.WING;
-            case "KHQR":  return PaymentMethod.KHQR;
-            default:      return PaymentMethod.CASH;
-        }
-    }
 }

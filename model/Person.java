@@ -41,16 +41,9 @@ public abstract class Person implements Displayable {
         this.gender = cleanText(gender, "Unknown Gender");
     }
 
-    // OVERLOAD 1 — single full number string
     public void setPhoneNumber(String phoneNumber) {
         String cleaned = cleanText(phoneNumber, "No Phone");
         this.phoneNumber = (cleaned.length() >= 8) ? cleaned : "Invalid Phone";
-    }
-
-    // OVERLOAD 2 — country code + local number separately
-    public void setPhoneNumber(String countryCode, String localNumber) {
-        String combined = cleanText(countryCode, "") + cleanText(localNumber, "");
-        setPhoneNumber(combined);
     }
 
     @Override
@@ -81,5 +74,6 @@ public abstract class Person implements Displayable {
     public int hashCode() {
         return Objects.hash(name, phoneNumber);
     }
+    // Abstraction: subclasses (User, Staff) must each provide their own answer.
     public abstract String getRoleDescription();
 }

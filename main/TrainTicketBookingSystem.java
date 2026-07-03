@@ -1,8 +1,5 @@
 package main;
 
-import enums.BookingStatus;
-import enums.PaymentMethod;
-import enums.TicketClass;
 import enums.TrainType;
 import exceptions.TicketIssuanceException;
 import interfaces.BookingSearchable;
@@ -11,7 +8,6 @@ import interfaces.TrainSearchable;
 import interfaces.UserSearchable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -149,62 +145,29 @@ public class TrainTicketBookingSystem implements Displayable, UserSearchable, Tr
         return result;
     }
 
-    /** Filter trains that still have at least one available seat in the given class. */
-    public List<Train> filterTrainsByClassAvailability(TicketClass ticketClass) {
-        List<Train> result = new ArrayList<>();
-        if (ticketClass == null) return result;
-        for (Train train : trains) {
-            if (train.hasAvailableSeat(ticketClass)) result.add(train);
-        }
-        return result;
-    }
-
     // ═══════════════════════════════════════════════════════════════════════════════
     // SORT METHODS  — use Comparator + Collections.sort()
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    /**
-     * Returns a copy of the train list sorted by Economy base price (ascending).
-     * Demonstrates: Comparator, Collections.sort()
-     */
+    /** Returns a copy of the train list sorted by Economy base price (ascending). */
     public List<Train> sortTrainsByPrice() {
         List<Train> sorted = new ArrayList<>(trains);
-        Collections.sort(sorted, new Comparator<Train>() {
-            @Override
-            public int compare(Train a, Train b) {
-                return Double.compare(a.getTicketPrice(), b.getTicketPrice());
-            }
-        });
+        // Comparator interface — the lambda supplies the compare() logic (polymorphism).
+        Collections.sort(sorted, (a, b) -> Double.compare(a.getTicketPrice(), b.getTicketPrice()));
         return sorted;
     }
 
-    /**
-     * Returns a copy sorted by total available seats (most available first).
-     */
+    /** Returns a copy sorted by total available seats (most available first). */
     public List<Train> sortTrainsByAvailableSeats() {
         List<Train> sorted = new ArrayList<>(trains);
-        Collections.sort(sorted, new Comparator<Train>() {
-            @Override
-            public int compare(Train a, Train b) {
-                int seatsA = a.getTotalSeats() - a.getReservedSeatCount();
-                int seatsB = b.getTotalSeats() - b.getReservedSeatCount();
-                return Integer.compare(seatsB, seatsA); // descending
-            }
-        });
+        Collections.sort(sorted, (a, b) -> Integer.compare(b.getAvailableSeats(), a.getAvailableSeats())); // descending
         return sorted;
     }
 
-    /**
-     * Returns a copy sorted by TrainType ordinal (REGULAR → EXPRESS → LUXURY).
-     */
+    /** Returns a copy sorted by TrainType ordinal (REGULAR → EXPRESS → LUXURY). */
     public List<Train> sortTrainsByTrainType() {
         List<Train> sorted = new ArrayList<>(trains);
-        Collections.sort(sorted, new Comparator<Train>() {
-            @Override
-            public int compare(Train a, Train b) {
-                return Integer.compare(a.getTrainType().ordinal(), b.getTrainType().ordinal());
-            }
-        });
+        Collections.sort(sorted, (a, b) -> Integer.compare(a.getTrainType().ordinal(), b.getTrainType().ordinal()));
         return sorted;
     }
 
@@ -364,14 +327,6 @@ public class TrainTicketBookingSystem implements Displayable, UserSearchable, Tr
         for (Booking booking : bookings) {
             booking.displayInfo();
         }
-    }
-
-    /** Returns all bookings for a given user (including cancelled). */
-    public List<Booking> getBookingsForUser(int userId) {
-        List<Booking> result = new ArrayList<>();
-        User user = searchUserById(userId);
-        if (user == null) return result;
-        return user.getBookingsCopy();
     }
 
     /** Returns the most recent ticket for a booking ID. */

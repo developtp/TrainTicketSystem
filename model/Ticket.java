@@ -5,24 +5,6 @@ import interfaces.Printable;
 import java.time.LocalDate;
 import java.util.Objects;
 
-/**
- * Represents an issued train ticket.
- *
- * All passenger/train/price information is retrieved through the linked Booking —
- * Ticket itself stores only ticket-specific data (id, issueDate, seat).
- *
- * OOP concepts demonstrated here:
- *   - Encapsulation : all fields private; constructor is private (factory pattern)
- *   - Static        : nextTicketId, ticketCount, createTicket() factory method
- *   - Overriding    : displayInfo(), print(), toString(), equals(), hashCode()
- *   - Interface     : implements Displayable, Printable
- *   - Composition   : contains a Booking reference (Booking → User, Train, etc.)
- *
- * Creation flow:
- *   TrainTicketBookingSystem.processPayment()
- *     → payment.pay()               — confirms booking
- *     → Ticket.createTicket(...)    — validates, creates ticket
- */
 public class Ticket implements Displayable, Printable {
 
     // ─── Static counters ─────────────────────────────────────────────────────────
@@ -32,7 +14,7 @@ public class Ticket implements Displayable, Printable {
     // ─── Instance fields ─────────────────────────────────────────────────────────
     private int       ticketId;
     private Booking   booking;
-    private String    seatNumber;   // seat label (e.g. "E3", "B1", "F2")
+    private String    seatNumber;   // seat label (e.g. "1", "2", "3")
     private LocalDate issueDate;    // date the ticket was generated
     private String    status;
 
@@ -107,7 +89,6 @@ public class Ticket implements Displayable, Printable {
         System.out.println("Status      : " + status);
         if (booking != null) {
             System.out.println("Booking ID  : " + booking.getBookingId());
-            System.out.println("Class       : " + booking.getTicketClass().getLabel());
             System.out.printf ("Price       : $%.2f%n", booking.getPrice());
             System.out.println("Travel Date : " + booking.getTravelDate());
             if (booking.getUser()  != null) System.out.println("Passenger   : " + booking.getUser().getName());
@@ -134,7 +115,6 @@ public class Ticket implements Displayable, Printable {
                         + " [" + booking.getTrain().getTrainType().getLabel() + "]");
                 System.out.println("Route       : " + booking.getTrain().getRoute());
             }
-            System.out.println("Class       : " + booking.getTicketClass().getLabel());
             System.out.printf ("Price       : $%.2f%n", booking.getPrice());
             System.out.println("Travel Date : " + booking.getTravelDate());
         }

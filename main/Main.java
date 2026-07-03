@@ -1,10 +1,7 @@
 package main;
 
-import enums.BookingStatus;
 import enums.PaymentMethod;
-import enums.TicketClass;
 import enums.TrainType;
-import exceptions.TicketIssuanceException;
 import java.util.List;
 import java.util.Scanner;
 import model.Booking;
@@ -14,29 +11,13 @@ import model.Ticket;
 import model.Train;
 import model.User;
 
-/**
- * Entry point for the Train Ticket System.
- *
- * Design:
- *   - Pre-seeds the system with sample trains on startup
- *   - Drives a professional, looping console menu
- *   - Each menu option is handled by a dedicated private method
- *   - No 500-line switch block — every handler is self-contained
- *
- * OOP concepts demonstrated at the menu level:
- *   - Polymorphism    : Displayable list printed in bulk
- *   - Exception Handling: TicketIssuanceException caught in menu flow
- *   - Static          : Train.getTrainCount(), User.getUserCount()
- */
 public class Main {
 
-    // ─── Shared state ─────────────────────────────────────────────────────────────
+    // ─── Shared state 
     private static TrainTicketBookingSystem system;
     private static Scanner                  sc;
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // ENTRY POINT
-    // ═══════════════════════════════════════════════════════════════════════════════
     public static void main(String[] args) {
         system = new TrainTicketBookingSystem("CAM Train Booking");
         sc     = new Scanner(System.in);
@@ -46,41 +27,32 @@ public class Main {
         sc.close();
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // SEED DATA — pre-loaded trains so the menu is useful immediately
-    // ═══════════════════════════════════════════════════════════════════════════════
     private static void seedData() {
         system.addTrain(new Train("Star Express",
                 new Route("Phnom Penh", "Siem Reap"),
-                TrainType.EXPRESS,
-                30, 10, 5));
+                TrainType.EXPRESS, 45));
 
         system.addTrain(new Train("Kingdom Rail",
                 new Route("Phnom Penh", "Battambang"),
-                TrainType.REGULAR,
-                40, 15, 5));
+                TrainType.REGULAR, 60));
 
         system.addTrain(new Train("Royal Luxury",
                 new Route("Siem Reap", "Sihanoukville"),
-                TrainType.LUXURY,
-                20, 10, 5));
+                TrainType.LUXURY, 35));
 
         system.addTrain(new Train("Mekong Express",
                 new Route("Phnom Penh", "Kampot"),
-                TrainType.EXPRESS,
-                25, 10, 5));
+                TrainType.EXPRESS, 40));
 
         system.addTrain(new Train("Local Shuttle",
                 new Route("Battambang", "Poipet"),
-                TrainType.REGULAR,
-                50, 0, 0));
+                TrainType.REGULAR, 50));
 
         System.out.println("System ready. " + Train.getTrainCount() + " trains loaded.\n");
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // MAIN MENU LOOP
-    // ═══════════════════════════════════════════════════════════════════════════════
     private static void runMenu() {
         boolean running = true;
         while (running) {
@@ -125,9 +97,7 @@ public class Main {
         System.out.println("===========================================");
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // HANDLER 1 — Register User
-    // ═══════════════════════════════════════════════════════════════════════════════
     private static void handleRegisterUser() {
         System.out.println("--- Register New User ---");
         System.out.print("Full Name   : "); String name   = sc.nextLine().trim();
@@ -179,30 +149,12 @@ public class Main {
     // HANDLER 4 — Filter Trains
     // ═══════════════════════════════════════════════════════════════════════════════
     private static void handleFilterTrains() {
-        System.out.println("--- Filter Trains ---");
-        System.out.println("Filter by:");
-        System.out.println("  1. Train Type  (REGULAR / EXPRESS / LUXURY)");
-        System.out.println("  2. Class Availability  (ECONOMY / BUSINESS / FIRST CLASS)");
-        int choice = readInt("Choice: ");
-
-        if (choice == 1) {
-            TrainType type = selectTrainType();
-            if (type == null) return;
-            List<Train> results = system.filterTrainsByType(type);
-            System.out.println("\n" + type.getLabel() + " trains (" + results.size() + " found):");
-            system.displayTrainList(results);
-
-        } else if (choice == 2) {
-            TicketClass cls = selectTicketClass();
-            if (cls == null) return;
-            List<Train> results = system.filterTrainsByClassAvailability(cls);
-            System.out.println("\nTrains with available " + cls.getLabel() + " seats ("
-                    + results.size() + " found):");
-            system.displayTrainList(results);
-
-        } else {
-            System.out.println("Invalid filter choice.");
-        }
+        System.out.println("--- Filter Trains By Type ---");
+        TrainType type = selectTrainType();
+        if (type == null) return;
+        List<Train> results = system.filterTrainsByType(type);
+        System.out.println("\n" + type.getLabel() + " trains (" + results.size() + " found):");
+        system.displayTrainList(results);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -244,23 +196,14 @@ public class Main {
         Train train = system.searchTrainById(trainId);
         if (train == null) { System.out.println("Train not found."); return; }
 
-        // Step 3 — select ticket class
-        TicketClass ticketClass = selectTicketClass();
-        if (ticketClass == null) return;
-
-        if (!train.hasAvailableSeat(ticketClass)) {
-            System.out.println("No available seats in " + ticketClass.getLabel()
-                    + " class on this train.");
+        if (!train.hasAvailableSeat()) {
+            System.out.println("No available seats on this train.");
             return;
         }
 
-        // Step 4 — choose seat
-        System.out.println("\nSeat Selection for " + ticketClass.getLabel() + " class:");
-        System.out.println("  Available: " + train.getAvailableSeats(ticketClass)
-                + "/" + train.getCapacity(ticketClass));
-        System.out.println("  Seat prefix: '" + ticketClass.getSeatPrefix()
-                + "' (e.g., " + ticketClass.getSeatPrefix() + "1, "
-                + ticketClass.getSeatPrefix() + "2 ...)");
+        // Step 3 — choose seat
+        System.out.println("\nSeat Selection:");
+        System.out.println("  Available: " + train.getAvailableSeats() + "/" + train.getCapacity());
         System.out.println("  Enter '0' to auto-assign a seat.");
         System.out.print("Seat number : ");
         String seatInput = sc.nextLine().trim();
@@ -268,24 +211,24 @@ public class Main {
         String seatNumber;
         if (seatInput.equals("0") || seatInput.isEmpty()) {
             // Auto-assign
-            seatNumber = train.reserveSeat(ticketClass);
+            seatNumber = train.reserveSeat();
             if (seatNumber == null) {
-                System.out.println("Auto-assignment failed. Class may be full.");
+                System.out.println("Auto-assignment failed. Train may be full.");
                 return;
             }
             System.out.println("Auto-assigned seat: " + seatNumber);
         } else {
             // Manual choice — validate and reserve
             seatNumber = seatInput.toUpperCase();
-            boolean reserved = train.reserveSeat(seatNumber, ticketClass);
+            boolean reserved = train.reserveSeat(seatNumber);
             if (!reserved) {
                 System.out.println("Could not reserve seat '" + seatNumber + "'. Please try again.");
                 return;
             }
         }
 
-        // Step 5 — create booking (price auto-calculated inside constructor)
-        Booking booking = new Booking(user, train, ticketClass, seatNumber);
+        // Step 4 — create booking (price auto-calculated inside constructor)
+        Booking booking = new Booking(user, train, seatNumber);
         system.createBooking(booking);
 
         System.out.println("\n--- Booking Summary ---");
@@ -381,17 +324,8 @@ public class Main {
         User user = selectUser();
         if (user == null) return;
 
-        List<Booking> myBookings = system.getBookingsForUser(user.getUserId());
-        if (myBookings.isEmpty()) {
-            System.out.println("No bookings found for " + user.getName() + ".");
-            return;
-        }
-
-        System.out.println("\nAll bookings for " + user.getName()
-                + " (" + myBookings.size() + " total):");
-        for (Booking b : myBookings) {
-            b.displayInfo();
-        }
+        // Sorted earliest-to-latest by travel date (Booking's Comparable).
+        user.displayBookingHistory();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -446,28 +380,6 @@ public class Main {
         }
     }
 
-    /** Prompts the user to select a TicketClass from a numbered list. */
-    private static TicketClass selectTicketClass() {
-        System.out.println("Ticket classes:");
-        System.out.printf("  1. Economy     ($%.2f base)%n",
-                service.PriceCalculator.calculatePrice(TrainType.REGULAR, TicketClass.ECONOMY));
-        System.out.printf("  2. Business    ($%.2f base)%n",
-                service.PriceCalculator.calculatePrice(TrainType.REGULAR, TicketClass.BUSINESS));
-        System.out.printf("  3. First Class ($%.2f base)%n",
-                service.PriceCalculator.calculatePrice(TrainType.REGULAR, TicketClass.FIRST_CLASS));
-        int choice = readInt("Choice: ");
-        switch (choice) {
-            case 1: return TicketClass.ECONOMY;
-            case 2: return TicketClass.BUSINESS;
-            case 3: return TicketClass.FIRST_CLASS;
-            default: System.out.println("Invalid choice."); return null;
-        }
-    }
-
-    /**
-     * Reads an integer from stdin.
-     * Reprompts on invalid input (prevents InputMismatchException crash).
-     */
     private static int readInt(String prompt) {
         while (true) {
             if (!prompt.isEmpty()) System.out.print(prompt);
