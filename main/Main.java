@@ -19,7 +19,7 @@ public class Main {
 
     // ENTRY POINT
     public static void main(String[] args) {
-        system = new TrainTicketBookingSystem("CAM Train Booking");
+        system = new TrainTicketBookingSystem("Train Booking");
         sc     = new Scanner(System.in);
 
         seedData();       // pre-load sample trains
